@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            max-height: 50px;
+            margin-right: 15px;
+        }
+        .weather-card {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .weather-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .nav-tabs .nav-link {
+            font-weight: 500;
+            color: #495057;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: 600;
+            color: #0d6efd;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .form-select {
+            border-radius: 5px;
+        }
+        .badge {
+            font-weight: 500;
+            padding: 5px 10px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 logo-container">
+                    <img src="https://via.placeholder.com/150x50?text=Company+Logo" alt="Company Logo" class="logo">
+                    <h1 class="h4 mb-0">Project Dashboard</h1>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex justify-content-md-end">
+                        <div class="weather-card me-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-geo-alt-fill weather-icon text-primary"></i>
+                                <div>
+                                    <div class="fw-bold">Safah</div>
+                                    <div class="temperature" id="safah-temp">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weather-card">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-geo-alt-fill weather-icon text-primary"></i>
+                                <div>
+                                    <div class="fw-bold">Wadi Latham</div>
+                                    <div class="temperature" id="wadi-temp">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-muted" id="current-date"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="manpower-tab" data-bs-toggle="tab" data-bs-target="#manpower" type="button" role="tab" aria-controls="manpower" aria-selected="true">Manpower Utilization</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button" role="tab" aria-controls="progress" aria-selected="false">Project Progress</button>
+            </li>
+        </ul>
+
+        <div class="tab-content py-4" id="dashboardTabsContent">
+            <!-- Manpower Utilization Tab -->
+            <div class="tab-pane fade show active" id="manpower" role="tabpanel" aria-labelledby="manpower-tab">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Manpower Utilization</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="date-select" class="form-label">Select Date</label>
+                                <select class="form-select" id="date-select">
+                                    <option value="">Loading dates...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sector-select" class="form-label">Select Sector</label>
+                                <select class="form-select" id="sector-select">
+                                    <option value="">All Sectors</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="chart-container mb-4">
+                            <canvas id="manpowerChart"></canvas>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="manpower-table">
+                                <thead>
+                                    <tr>
+                                        <th>WI Number</th>
+                                        <th>Formant</th>
+                                        <th>Manpower Size</th>
+                                        <th>Sector</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" class="text-center">Select a date to view data</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Progress Tab -->
+            <div class="tab-pane fade" id="progress" role="tabpanel" aria-labelledby="progress-tab">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Project Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>This section will display project progress metrics and visualizations.</p>
+                        <div class="chart-container">
+                            <canvas id="progressChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <script>
+        // Set current date
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+
+        // Simulate weather data
+        function updateWeather() {
+            const safahTemp = (Math.random() * 10 + 25).toFixed(1);
+            const wadiTemp = (Math.random() * 10 + 30).toFixed(1);
+            
+            document.getElementById('safah-temp').innerHTML = `${safahTemp}°C <i class="bi bi-cloud-sun"></i>`;
+            document.getElementById('wadi-temp').innerHTML = `${wadiTemp}°C <i class="bi bi-sun"></i>`;
+        }
+        
+        updateWeather();
+        setInterval(updateWeather, 3600000);
+
+        // Load and process CSV data
+        let manpowerData = [];
+        let dates = [];
+        let sectors = [];
+
+        function showLoading(selector, message = 'Loading...') {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.innerHTML = `<span class="loading-spinner" aria-hidden="true"></span> ${message}`;
+            }
+        }
+
+        function loadCSVData() {
+            showLoading('#manpower-table tbody td', 'Loading data...');
+            
+            // Using a CORS proxy to access the Google Sheets data
+            const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gLqzfOxQybJBYdtMmtBJdYWb1EPkUcC7p-py4kiEaFO0Yre3gCtpetkg7X-XY19dVI-6dTydkJYm/pub?output=csv';
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            
+            // First try direct fetch
+            fetch(csvUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error('Direct fetch failed');
+                    return response.text();
+                })
+                .then(csvText => {
+                    parseCSVData(csvText);
+                })
+                .catch(error => {
+                    console.log('Direct fetch failed, trying with proxy');
+                    // If direct fetch fails, try with CORS proxy
+                    fetch(proxyUrl + csvUrl)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Proxy fetch failed');
+                            return response.text();
+                        })
+                        .then(csvText => {
+                            parseCSVData(csvText);
+                        })
+                        .catch(error => {
+                            console.error("Error loading CSV:", error);
+                            document.getElementById('manpower-table').querySelector('tbody').innerHTML = 
+                                '<tr><td colspan="5" class="text-center text-danger">Error loading data. Please try again later or check CORS settings.</td></tr>';
+                        });
+                });
+        }
+
+        function parseCSVData(csvText) {
+            // Basic CSV parsing (PapaParse might fail due to CORS)
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            manpowerData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length === headers.length) {
+                    const row = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        row[headers[j]] = values[j].trim();
+                    }
+                    manpowerData.push(row);
+                }
+            }
+            
+            processData();
+        }
+
+        function processData() {
+            // Extract unique dates and sectors
+            const dateSet = new Set();
+            const sectorSet = new Set();
+            
+            manpowerData.forEach(row => {
+                if (row.Date) dateSet.add(row.Date);
+                if (row.Sector) sectorSet.add(row.Sector);
+            });
+            
+            dates = Array.from(dateSet).sort();
+            sectors = Array.from(sectorSet).sort();
+            
+            // Populate date dropdown
+            const dateSelect = document.getElementById('date-select');
+            dateSelect.innerHTML = '<option value="">Select a date</option>';
+            dates.forEach(date => {
+                dateSelect.innerHTML += `<option value="${date}">${date}</option>`;
+            });
+            
+            // Populate sector dropdown
+            const sectorSelect = document.getElementById('sector-select');
+            sectorSelect.innerHTML = '<option value="">All Sectors</option>';
+            sectors.forEach(sector => {
+                sectorSelect.innerHTML += `<option value="${sector}">${sector}</option>`;
+            });
+            
+            // Set up event listeners
+            dateSelect.addEventListener('change', updateManpowerTable);
+            sectorSelect.addEventListener('change', updateManpowerTable);
+            
+            // If we have data, select the most recent date by default
+            if (dates.length > 0) {
+                dateSelect.value = dates[dates.length - 1];
+                updateManpowerTable();
+            }
+        }
+
+        function updateManpowerTable() {
+            const selectedDate = document.getElementById('date-select').value;
+            const selectedSector = document.getElementById('sector-select').value;
+            
+            if (!selectedDate) {
+                document.getElementById('manpower-table').querySelector('tbody').innerHTML = 
+                    '<tr><td colspan="5" class="text-center">Select a date to view data</td></tr>';
+                return;
+            }
+            
+            // Filter data based on selections
+            let filteredData = manpowerData.filter(row => row.Date === selectedDate);
+            if (selectedSector) {
+                filteredData = filteredData.filter(row => row.Sector === selectedSector);
+            }
+            
+            // Update table
+            const tbody = document.getElementById('manpower-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No data available for the selected filters</td></tr>';
+                return;
+            }
+            
+            filteredData.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                // Determine status badge
+                let statusBadge;
+                if (row.Status === 'Completed') {
+                    statusBadge = '<span class="badge bg-success">Completed</span>';
+                } else if (row.Status === 'In Progress') {
+                    statusBadge = '<span class="badge bg-warning text-dark">In Progress</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-secondary">Pending</span>';
+                }
+                
+                tr.innerHTML = `
+                    <td>${row['WI Number'] || 'N/A'}</td>
+                    <td>${row.Formant || 'N/A'}</td>
+                    <td>${row['Manpower Size'] || 'N/A'}</td>
+                    <td>${row.Sector || 'N/A'}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Update chart
+            updateManpowerChart(filteredData);
+        }
+
+        function updateManpowerChart(data) {
+            // Group by Formant and sum manpower
+            const formantGroups = {};
+            data.forEach(row => {
+                const formant = row.Formant || 'Unknown';
+                const manpower = parseInt(row['Manpower Size']) || 0;
+                
+                if (!formantGroups[formant]) {
+                    formantGroups[formant] = 0;
+                }
+                formantGroups[formant] += manpower;
+            });
+            
+            // Prepare chart data
+            const labels = Object.keys(formantGroups);
+            const values = Object.values(formantGroups);
+            
+            const ctx = document.getElementById('manpowerChart').getContext('2d');
+            
+            // Destroy previous chart if it exists
+            if (window.manpowerChart) {
+                window.manpowerChart.destroy();
+            }
+            
+            window.manpowerChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Manpower Utilization',
+                        data: values,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Workers'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Formant'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Manpower Distribution by Formant'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize progress chart (placeholder)
+        function initProgressChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            window.progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Project Completion %',
+                        data: [10, 25, 40, 55, 70, 85],
+                        fill: false,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Completion %'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCSVData();
+            initProgressChart();
+        });
+    </script>
+</body>
+</html>
