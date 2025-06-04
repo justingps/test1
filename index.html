@@ -7,132 +7,271 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
-    body { padding: 20px; max-width: 1400px; margin: 0 auto; }
-    .loading { display: none; text-align: center; margin: 20px 0; }
-    .debug-info { background: #f8f9fa; padding: 15px; margin-top: 20px; }
+    body {
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .date-card {
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .summary-card {
+      background-color: #e8f4fc;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .table th {
+      background-color: #3498db;
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+    .table-responsive {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .stat-card {
+      background-color: white;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Work Data Viewer</h1>
+  <div class="container-fluid">
+    <div class="header">
+      <h1><i class="fas fa-hard-hat"></i> Daily Work Report Viewer</h1>
+      <p class="lead">View work details by selecting a date</p>
+    </div>
     
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5>Select Date</h5>
-        <input type="date" id="datePicker" class="form-control mb-2">
-        <button id="fetchData" class="btn btn-primary">Get Data</button>
+    <div class="date-card">
+      <div class="row">
+        <div class="col-md-6">
+          <label for="datePicker" class="form-label">Select Date:</label>
+          <input type="date" id="datePicker" class="form-control">
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <button id="fetchData" class="btn btn-primary w-100">
+            <i class="fas fa-search"></i> Get Work Data
+          </button>
+        </div>
       </div>
     </div>
     
     <div id="loading" class="loading">
-      <div class="spinner-border"></div>
-      <p>Loading...</p>
+      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Loading work data...</p>
     </div>
     
-    <div id="dataContainer"></div>
+    <div id="summaryContainer" class="summary-card" style="display: none;">
+      <h4>Summary for <span id="selectedDateDisplay"></span></h4>
+      <div class="row mt-3" id="summaryStats"></div>
+    </div>
     
-    <!-- Debug panel -->
-    <div class="debug-info">
-      <h5>Debug Information</h5>
-      <div id="debugOutput"></div>
+    <div id="dataContainer" class="mt-4">
+      <!-- Data will be displayed here -->
     </div>
   </div>
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Flatpickr -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   
   <script>
-    // Debug function
-    function debugLog(message) {
-      const debugDiv = document.getElementById('debugOutput');
-      debugDiv.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
-    }
-    
     document.addEventListener('DOMContentLoaded', function() {
-      debugLog("Page loaded");
-      
+      // Initialize date picker with default as today
       flatpickr("#datePicker", {
         dateFormat: "Y-m-d",
-        defaultDate: "2025-03-27" // Set to a date you know has data
+        defaultDate: new Date()
       });
       
+      // Fetch data when button is clicked
       document.getElementById('fetchData').addEventListener('click', fetchData);
+      
+      // Also fetch data when date changes
+      document.getElementById('datePicker').addEventListener('change', fetchData);
     });
     
     function fetchData() {
       const dateInput = document.getElementById('datePicker').value;
       const loading = document.getElementById('loading');
       const dataContainer = document.getElementById('dataContainer');
-      
-      debugLog(`Fetching data for date: ${dateInput}`);
+      const summaryContainer = document.getElementById('summaryContainer');
+      const selectedDateDisplay = document.getElementById('selectedDateDisplay');
       
       if (!dateInput) {
-        debugLog("No date selected");
         alert('Please select a date');
         return;
       }
       
+      // Format date for display
+      const dateObj = new Date(dateInput);
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      selectedDateDisplay.textContent = dateObj.toLocaleDateString('en-US', options);
+      
+      // Show loading indicator
       loading.style.display = 'block';
       dataContainer.innerHTML = '';
+      summaryContainer.style.display = 'none';
       
-      // REPLACE THIS WITH YOUR ACTUAL SCRIPT URL
-      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyDF555wpma2qlk0raWvcX7qjulxSpS-LfqbruIZR29yDCZwhhsPuo0iTv9sX-u_nTi/exec';
-      const url = `${scriptUrl}?date=${dateInput}`;
+      // Your Google Apps Script URL
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycby0PUzzAbElkiHhWld-z5z0VKZe4__f2mAB8DGo7DTr5Sh4uMgbpFeDMSnFYUfMJr_IsQ/exec';
       
-      debugLog(`Attempting to fetch from: ${url}`);
+      // Use JSONP approach to avoid CORS issues
+      const script = document.createElement('script');
+      script.src = `${scriptUrl}?date=${dateInput}&callback=handleData`;
       
-      fetch(url)
-        .then(response => {
-          debugLog(`Received response with status: ${response.status}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          debugLog(`Received data: ${JSON.stringify(data)}`);
-          loading.style.display = 'none';
-          
-          if (!data || data.length === 0) {
-            dataContainer.innerHTML = '<div class="alert alert-warning">No data found</div>';
-            return;
-          }
-          
-          // Simple table display for testing
-          let html = '<table class="table"><thead><tr>';
-          for (const key in data[0]) {
-            html += `<th>${key}</th>`;
-          }
-          html += '</tr></thead><tbody>';
-          
-          data.forEach(row => {
-            html += '<tr>';
-            for (const key in row) {
-              html += `<td>${row[key]}</td>`;
-            }
-            html += '</tr>';
-          });
-          
-          html += '</tbody></table>';
-          dataContainer.innerHTML = html;
-        })
-        .catch(error => {
-          debugLog(`Error: ${error.message}`);
-          loading.style.display = 'none';
-          dataContainer.innerHTML = `
-            <div class="alert alert-danger">
-              Error: ${error.message}<br>
-              Check console for details
-            </div>
-          `;
-          console.error('Error details:', error);
-        });
+      // Remove previous script if any
+      const oldScript = document.getElementById('tempScript');
+      if (oldScript) oldScript.remove();
+      
+      script.id = 'tempScript';
+      document.body.appendChild(script);
     }
     
-    // Trigger first load automatically
-    setTimeout(() => {
-      document.getElementById('fetchData').click();
-    }, 500);
+    function handleData(data) {
+      const loading = document.getElementById('loading');
+      const dataContainer = document.getElementById('dataContainer');
+      const summaryContainer = document.getElementById('summaryContainer');
+      const summaryStats = document.getElementById('summaryStats');
+      
+      loading.style.display = 'none';
+      
+      if (!data || data.length === 0) {
+        dataContainer.innerHTML = `
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle"></i> No work data found for the selected date.
+          </div>
+        `;
+        summaryContainer.style.display = 'none';
+        return;
+      }
+      
+      // Show summary container
+      summaryContainer.style.display = 'block';
+      
+      // Generate summary statistics
+      const uniqueForemen = [...new Set(data.map(item => item['FOREMAN ID']))].length;
+      const uniqueWorkItems = [...new Set(data.map(item => item['WI NO']))].length;
+      const uniqueAreas = [...new Set(data.map(item => item['AREA / BLOCK']))].length;
+      const uniqueResources = [...new Set(data.map(item => item['RESOURCE ID']))].length;
+      
+      summaryStats.innerHTML = `
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <h5 class="text-primary">${data.length}</h5>
+            <p class="mb-0">Total Entries</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <h5 class="text-primary">${uniqueForemen}</h5>
+            <p class="mb-0">Foremen</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <h5 class="text-primary">${uniqueWorkItems}</h5>
+            <p class="mb-0">Work Items</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <h5 class="text-primary">${uniqueAreas}</h5>
+            <p class="mb-0">Areas/Blocks</p>
+          </div>
+        </div>
+      `;
+      
+      // Create table
+      let tableHtml = `
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Foreman ID</th>
+                <th>WI NO</th>
+                <th>Area/Block</th>
+                <th>Work Description</th>
+                <th>Resource ID</th>
+                <th>Resource Type</th>
+                <th>Manpower/Equipment</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      // Add rows
+      data.forEach(row => {
+        tableHtml += `
+          <tr>
+            <td>${formatDateForDisplay(row['DATE'])}</td>
+            <td>${row['FOREMAN ID'] || '-'}</td>
+            <td>${row['WI NO'] || '-'}</td>
+            <td>${row['AREA / BLOCK'] || '-'}</td>
+            <td>${row['DESCRIPTION OF WORK'] || '-'}</td>
+            <td>${row['RESOURCE ID'] || '-'}</td>
+            <td>${row['RESOURCE DESIGNATION'] || '-'}</td>
+            <td>${row['MANPOWER / EQUIPMENT'] || row['MANPOWER / EQUIPMENT'] || '-'}</td>
+          </tr>
+        `;
+      });
+      
+      tableHtml += `
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      dataContainer.innerHTML = tableHtml;
+    }
+    
+    function formatDateForDisplay(dateValue) {
+      if (!dateValue) return '-';
+      
+      // If it's already a string in the format we want
+      if (typeof dateValue === 'string' && dateValue.match(/\d+-[A-Za-z]+-\d+/)) {
+        return dateValue;
+      }
+      
+      // If it's a Date object
+      if (dateValue instanceof Date) {
+        return Utilities.formatDate(dateValue, Session.getScriptTimeZone(), "dd-MMM-yyyy");
+      }
+      
+      // If it's a numeric date (like 2025331)
+      if (typeof dateValue === 'number' || /^\d+$/.test(dateValue)) {
+        // You'll need to implement your numeric date conversion logic here
+        return dateValue; // Return as-is for now
+      }
+      
+      return dateValue || '-';
+    }
   </script>
 </body>
 </html>
