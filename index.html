@@ -1,277 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Work Data Viewer</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <style>
-    body {
-      padding: 20px;
-      max-width: 1400px;
-      margin: 0 auto;
-      font-family: Arial, sans-serif;
-    }
-    .header {
-      background-color: #2c3e50;
-      color: white;
-      padding: 20px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-    }
-    .date-card {
-      background-color: #f8f9fa;
-      border-radius: 5px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .summary-card {
-      background-color: #e8f4fc;
-      border-left: 4px solid #3498db;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .loading {
-      display: none;
-      text-align: center;
-      margin: 20px 0;
-    }
-    .table th {
-      background-color: #3498db;
-      color: white;
-      position: sticky;
-      top: 0;
-    }
-    .table-responsive {
-      max-height: 600px;
-      overflow-y: auto;
-    }
-    .stat-card {
-      background-color: white;
-      border-radius: 5px;
-      padding: 10px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Report Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .date-picker {
+            margin: 20px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .no-data {
+            color: #666;
+            font-style: italic;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="container-fluid">
-    <div class="header">
-      <h1><i class="fas fa-hard-hat"></i> Daily Work Report Viewer</h1>
-      <p class="lead">View work details by selecting a date</p>
-    </div>
-    
-    <div class="date-card">
-      <div class="row">
-        <div class="col-md-6">
-          <label for="datePicker" class="form-label">Select Date:</label>
-          <input type="date" id="datePicker" class="form-control">
+    <div class="container">
+        <h1>Work Report Viewer</h1>
+        <input type="date" id="reportDate" class="date-picker" onchange="filterDataByDate()">
+        
+        <div id="reportContainer">
+            <!-- Data will be displayed here -->
         </div>
-        <div class="col-md-6 d-flex align-items-end">
-          <button id="fetchData" class="btn btn-primary w-100">
-            <i class="fas fa-search"></i> Get Work Data
-          </button>
-        </div>
-      </div>
     </div>
-    
-    <div id="loading" class="loading">
-      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-3">Loading work data...</p>
-    </div>
-    
-    <div id="summaryContainer" class="summary-card" style="display: none;">
-      <h4>Summary for <span id="selectedDateDisplay"></span></h4>
-      <div class="row mt-3" id="summaryStats"></div>
-    </div>
-    
-    <div id="dataContainer" class="mt-4">
-      <!-- Data will be displayed here -->
-    </div>
-  </div>
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Flatpickr -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize date picker with default as today
-      flatpickr("#datePicker", {
-        dateFormat: "Y-m-d",
-        defaultDate: new Date()
-      });
-      
-      // Fetch data when button is clicked
-      document.getElementById('fetchData').addEventListener('click', fetchData);
-      
-      // Also fetch data when date changes
-      document.getElementById('datePicker').addEventListener('change', fetchData);
-    });
-    
-    function fetchData() {
-      const dateInput = document.getElementById('datePicker').value;
-      const loading = document.getElementById('loading');
-      const dataContainer = document.getElementById('dataContainer');
-      const summaryContainer = document.getElementById('summaryContainer');
-      const selectedDateDisplay = document.getElementById('selectedDateDisplay');
-      
-      if (!dateInput) {
-        alert('Please select a date');
-        return;
-      }
-      
-      // Format date for display
-      const dateObj = new Date(dateInput);
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      selectedDateDisplay.textContent = dateObj.toLocaleDateString('en-US', options);
-      
-      // Show loading indicator
-      loading.style.display = 'block';
-      dataContainer.innerHTML = '';
-      summaryContainer.style.display = 'none';
-      
-      // Your Google Apps Script URL
-      const scriptUrl = 'https://script.google.com/macros/s/AKfycby0PUzzAbElkiHhWld-z5z0VKZe4__f2mAB8DGo7DTr5Sh4uMgbpFeDMSnFYUfMJr_IsQ/exec';
-      
-      // Use JSONP approach to avoid CORS issues
-      const script = document.createElement('script');
-      script.src = `${scriptUrl}?date=${dateInput}&callback=handleData`;
-      
-      // Remove previous script if any
-      const oldScript = document.getElementById('tempScript');
-      if (oldScript) oldScript.remove();
-      
-      script.id = 'tempScript';
-      document.body.appendChild(script);
-    }
-    
-    function handleData(data) {
-      const loading = document.getElementById('loading');
-      const dataContainer = document.getElementById('dataContainer');
-      const summaryContainer = document.getElementById('summaryContainer');
-      const summaryStats = document.getElementById('summaryStats');
-      
-      loading.style.display = 'none';
-      
-      if (!data || data.length === 0) {
-        dataContainer.innerHTML = `
-          <div class="alert alert-warning">
-            <i class="fas fa-exclamation-circle"></i> No work data found for the selected date.
-          </div>
-        `;
-        summaryContainer.style.display = 'none';
-        return;
-      }
-      
-      // Show summary container
-      summaryContainer.style.display = 'block';
-      
-      // Generate summary statistics
-      const uniqueForemen = [...new Set(data.map(item => item['FOREMAN ID']))].length;
-      const uniqueWorkItems = [...new Set(data.map(item => item['WI NO']))].length;
-      const uniqueAreas = [...new Set(data.map(item => item['AREA / BLOCK']))].length;
-      const uniqueResources = [...new Set(data.map(item => item['RESOURCE ID']))].length;
-      
-      summaryStats.innerHTML = `
-        <div class="col-md-3">
-          <div class="stat-card text-center">
-            <h5 class="text-primary">${data.length}</h5>
-            <p class="mb-0">Total Entries</p>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat-card text-center">
-            <h5 class="text-primary">${uniqueForemen}</h5>
-            <p class="mb-0">Foremen</p>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat-card text-center">
-            <h5 class="text-primary">${uniqueWorkItems}</h5>
-            <p class="mb-0">Work Items</p>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat-card text-center">
-            <h5 class="text-primary">${uniqueAreas}</h5>
-            <p class="mb-0">Areas/Blocks</p>
-          </div>
-        </div>
-      `;
-      
-      // Create table
-      let tableHtml = `
-        <div class="table-responsive">
-          <table class="table table-striped table-hover">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Foreman ID</th>
-                <th>WI NO</th>
-                <th>Area/Block</th>
-                <th>Work Description</th>
-                <th>Resource ID</th>
-                <th>Resource Type</th>
-                <th>Manpower/Equipment</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      // Add rows
-      data.forEach(row => {
-        tableHtml += `
-          <tr>
-            <td>${formatDateForDisplay(row['DATE'])}</td>
-            <td>${row['FOREMAN ID'] || '-'}</td>
-            <td>${row['WI NO'] || '-'}</td>
-            <td>${row['AREA / BLOCK'] || '-'}</td>
-            <td>${row['DESCRIPTION OF WORK'] || '-'}</td>
-            <td>${row['RESOURCE ID'] || '-'}</td>
-            <td>${row['RESOURCE DESIGNATION'] || '-'}</td>
-            <td>${row['MANPOWER / EQUIPMENT'] || row['MANPOWER / EQUIPMENT'] || '-'}</td>
-          </tr>
-        `;
-      });
-      
-      tableHtml += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      
-      dataContainer.innerHTML = tableHtml;
-    }
-    
-    function formatDateForDisplay(dateValue) {
-      if (!dateValue) return '-';
-      
-      // If it's already a string in the format we want
-      if (typeof dateValue === 'string' && dateValue.match(/\d+-[A-Za-z]+-\d+/)) {
-        return dateValue;
-      }
-      
-      // If it's a Date object
-      if (dateValue instanceof Date) {
-        return Utilities.formatDate(dateValue, Session.getScriptTimeZone(), "dd-MMM-yyyy");
-      }
-      
-      // If it's a numeric date (like 2025331)
-      if (typeof dateValue === 'number' || /^\d+$/.test(dateValue)) {
-        // You'll need to implement your numeric date conversion logic here
-        return dateValue; // Return as-is for now
-      }
-      
-      return dateValue || '-';
-    }
-  </script>
+    <script>
+        // Replace this with your published Google Sheets CSV URL
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRl2ATkqwgFtRso2xwJ2nUKHTn9aj3LZKXft7Oy9rh7iojfLWsmoTu7NliI6bpoCVNzzYtvDfNkyjef/pub?gid=0&single=true&output=csv';
+        
+        let allData = [];
+        
+        // Load data when page loads
+        window.onload = function() {
+            loadData();
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reportDate').value = today;
+        };
+        
+        function loadData() {
+            fetch(SHEET_URL)
+                .then(response => response.text())
+                .then(csvData => {
+                    // Parse CSV data
+                    allData = parseCSV(csvData);
+                    // Filter with today's date initially
+                    filterDataByDate();
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    document.getElementById('reportContainer').innerHTML = 
+                        '<p class="no-data">Error loading data. Please try again later.</p>';
+                });
+        }
+        
+        function parseCSV(csv) {
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',');
+            
+            return lines.slice(1).map(line => {
+                const values = line.split(',');
+                let obj = {};
+                headers.forEach((header, i) => {
+                    header = header.trim();
+                    obj[header] = values[i] ? values[i].trim() : '';
+                });
+                return obj;
+            });
+        }
+        
+        function filterDataByDate() {
+            const selectedDate = document.getElementById('reportDate').value;
+            const formattedDate = selectedDate; // Already in YYYY-MM-DD format
+            
+            const filteredData = allData.filter(row => row.DATE === formattedDate);
+            
+            displayData(filteredData);
+        }
+        
+        function displayData(data) {
+            const container = document.getElementById('reportContainer');
+            
+            if (data.length === 0) {
+                container.innerHTML = '<p class="no-data">No records found for the selected date.</p>';
+                return;
+            }
+            
+            // Group by work description (assuming same description means same work)
+            const groupedData = {};
+            data.forEach(row => {
+                const key = `${row['DESCRIPTION OF WORK']}|${row['PERMIT NUMBER']}`;
+                if (!groupedData[key]) {
+                    groupedData[key] = {
+                        details: {
+                            'FOREMAN ID': row['FOREMAN ID'],
+                            'WI NO': row['WI NO'],
+                            'AREA / BLOCK': row['AREA / BLOCK'],
+                            'DESCRIPTION OF WORK': row['DESCRIPTION OF WORK'],
+                            'PERMIT NUMBER': row['PERMIT NUMBER'],
+                            'VALIDATION TIME': row['VALIDATION TIME'],
+                            'SUSPENSION TIME': row['SUSPENSION TIME']
+                        },
+                        resources: []
+                    };
+                }
+                groupedData[key].resources.push({
+                    'RESOURCE ID': row['RESOURCE ID'],
+                    'TIME-IN': row['TIME-IN'],
+                    'TIME-OUT': row['TIME-OUT']
+                });
+            });
+            
+            // Generate HTML
+            let html = '';
+            
+            Object.values(groupedData).forEach(group => {
+                html += `
+                    <div class="work-group">
+                        <h3>Work Details</h3>
+                        <table>
+                            <tr>
+                                <th>Foreman ID</th>
+                                <th>WI NO</th>
+                                <th>Area/Block</th>
+                                <th>Permit Number</th>
+                                <th>Validation Time</th>
+                                <th>Suspension Time</th>
+                            </tr>
+                            <tr>
+                                <td>${group.details['FOREMAN ID']}</td>
+                                <td>${group.details['WI NO']}</td>
+                                <td>${group.details['AREA / BLOCK']}</td>
+                                <td>${group.details['PERMIT NUMBER']}</td>
+                                <td>${group.details['VALIDATION TIME']}</td>
+                                <td>${group.details['SUSPENSION TIME']}</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Work Description</h4>
+                        <p>${group.details['DESCRIPTION OF WORK'].replace(/\n/g, '<br>')}</p>
+                        
+                        <h4>Resources</h4>
+                        <table>
+                            <tr>
+                                <th>Resource ID</th>
+                                <th>Time-In</th>
+                                <th>Time-Out</th>
+                            </tr>
+                            ${group.resources.map(resource => `
+                                <tr>
+                                    <td>${resource['RESOURCE ID']}</td>
+                                    <td>${resource['TIME-IN']}</td>
+                                    <td>${resource['TIME-OUT']}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                        <hr>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+    </script>
 </body>
 </html>
