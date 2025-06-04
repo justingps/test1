@@ -8,6 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            line-height: 1.6;
         }
         .container {
             max-width: 1200px;
@@ -15,41 +16,131 @@
         }
         h1 {
             color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .date-picker-container {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            gap: 15px;
         }
         .date-picker {
-            margin: 20px 0;
             padding: 10px;
             font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .date-label {
+            font-weight: bold;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #4CAF50;
+            color: white;
             position: sticky;
             top: 0;
         }
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f2f2f2;
         }
         .no-data {
             color: #666;
             font-style: italic;
             margin: 20px 0;
+            text-align: center;
+            padding: 20px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+        }
+        .work-group {
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        .work-group-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .work-group-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .work-group-id {
+            background-color: white;
+            color: #4CAF50;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .work-description {
+            white-space: pre-line;
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .resource-table {
+            margin-top: 15px;
+        }
+        .summary-card {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .summary-item {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 10px 15px;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .summary-value {
+            font-weight: bold;
+            color: #333;
+        }
+        @media (max-width: 768px) {
+            .summary-item {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Work Report Viewer</h1>
-        <input type="date" id="reportDate" class="date-picker" onchange="filterDataByDate()">
+        
+        <div class="date-picker-container">
+            <span class="date-label">Select Date:</span>
+            <input type="date" id="reportDate" class="date-picker" onchange="filterDataByDate()">
+        </div>
         
         <div id="reportContainer">
             <!-- Data will be displayed here -->
@@ -57,8 +148,8 @@
     </div>
 
     <script>
-        // Replace this with your published Google Sheets CSV URL
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRl2ATkqwgFtRso2xwJ2nUKHTn9aj3LZKXft7Oy9rh7iojfLWsmoTu7NliI6bpoCVNzzYtvDfNkyjef/pub?gid=0&single=true&output=csv';
+        // Your published Google Sheets CSV URL
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gLqzfOxQybJBYdtMmtBJdYWb1EPkUcC7p-py4kiEaFO0Yre3gCtpetkg7X-XY19dVI-6dTydkJYm/pub?gid=0&single=true&output=csv';
         
         let allData = [];
         
@@ -67,8 +158,9 @@
             loadData();
             
             // Set today's date as default
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('reportDate').value = today;
+            const today = new Date();
+            const formattedToday = formatDateForDisplay(today);
+            document.getElementById('reportDate').valueAsDate = today;
         };
         
         function loadData() {
@@ -89,13 +181,30 @@
         
         function parseCSV(csv) {
             const lines = csv.split('\n');
-            const headers = lines[0].split(',');
+            const headers = lines[0].split(',').map(h => h.trim());
             
             return lines.slice(1).map(line => {
-                const values = line.split(',');
+                // Handle quoted fields with commas
+                const values = [];
+                let inQuotes = false;
+                let currentValue = '';
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(currentValue.trim());
+                        currentValue = '';
+                    } else {
+                        currentValue += char;
+                    }
+                }
+                values.push(currentValue.trim());
+                
                 let obj = {};
                 headers.forEach((header, i) => {
-                    header = header.trim();
                     obj[header] = values[i] ? values[i].trim() : '';
                 });
                 return obj;
@@ -103,12 +212,34 @@
         }
         
         function filterDataByDate() {
-            const selectedDate = document.getElementById('reportDate').value;
-            const formattedDate = selectedDate; // Already in YYYY-MM-DD format
+            const selectedDate = document.getElementById('reportDate').valueAsDate;
+            const formattedDate = formatDateForSheet(selectedDate);
             
-            const filteredData = allData.filter(row => row.DATE === formattedDate);
+            const filteredData = allData.filter(row => {
+                const rowDate = formatDateForSheet(new Date(row.DATE));
+                return rowDate === formattedDate;
+            });
             
             displayData(filteredData);
+        }
+        
+        // Format date for comparison (DD-MM-YYYY)
+        function formatDateForSheet(date) {
+            if (!date) return '';
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+        
+        // Format date for display (DD-MMM-YYYY)
+        function formatDateForDisplay(date) {
+            if (!date) return '';
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
         }
         
         function displayData(data) {
@@ -119,10 +250,10 @@
                 return;
             }
             
-            // Group by work description (assuming same description means same work)
+            // Group by work description and permit number
             const groupedData = {};
             data.forEach(row => {
-                const key = `${row['DESCRIPTION OF WORK']}|${row['PERMIT NUMBER']}`;
+                const key = `${row['DESCRIPTION OF WORK']}|${row['PERMIT NUMBER']}|${row['WI NO']}`;
                 if (!groupedData[key]) {
                     groupedData[key] = {
                         details: {
@@ -139,6 +270,8 @@
                 }
                 groupedData[key].resources.push({
                     'RESOURCE ID': row['RESOURCE ID'],
+                    'RESOURCE DESIGNATION': row['RESOURCE DESIGNATION'],
+                    'MANPOWER / EQUIPMENT': row['MANPOWER / EQUIPMENT'],
                     'TIME-IN': row['TIME-IN'],
                     'TIME-OUT': row['TIME-OUT']
                 });
@@ -146,51 +279,78 @@
             
             // Generate HTML
             let html = '';
+            let groupCounter = 1;
             
             Object.values(groupedData).forEach(group => {
+                // Count different types of resources
+                const manpowerCount = group.resources.filter(r => r['MANPOWER / EQUIPMENT'].toLowerCase() !== 'equipment' && r['MANPOWER / EQUIPMENT'].toLowerCase() !== '-').length;
+                const equipmentCount = group.resources.filter(r => r['MANPOWER / EQUIPMENT'].toLowerCase() === 'equipment' || r['MANPOWER / EQUIPMENT'].toLowerCase() === '-').length;
+                
                 html += `
                     <div class="work-group">
-                        <h3>Work Details</h3>
-                        <table>
-                            <tr>
-                                <th>Foreman ID</th>
-                                <th>WI NO</th>
-                                <th>Area/Block</th>
-                                <th>Permit Number</th>
-                                <th>Validation Time</th>
-                                <th>Suspension Time</th>
-                            </tr>
-                            <tr>
-                                <td>${group.details['FOREMAN ID']}</td>
-                                <td>${group.details['WI NO']}</td>
-                                <td>${group.details['AREA / BLOCK']}</td>
-                                <td>${group.details['PERMIT NUMBER']}</td>
-                                <td>${group.details['VALIDATION TIME']}</td>
-                                <td>${group.details['SUSPENSION TIME']}</td>
-                            </tr>
-                        </table>
+                        <div class="work-group-header">
+                            <span class="work-group-title">Work Group #${groupCounter}</span>
+                            <span class="work-group-id">WI NO: ${group.details['WI NO']}</span>
+                        </div>
                         
-                        <h4>Work Description</h4>
-                        <p>${group.details['DESCRIPTION OF WORK'].replace(/\n/g, '<br>')}</p>
+                        <div class="summary-card">
+                            <div class="summary-item">
+                                <div class="summary-label">Foreman ID</div>
+                                <div class="summary-value">${group.details['FOREMAN ID']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Area/Block</div>
+                                <div class="summary-value">${group.details['AREA / BLOCK']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Permit Number</div>
+                                <div class="summary-value">${group.details['PERMIT NUMBER']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Work Hours</div>
+                                <div class="summary-value">${group.details['VALIDATION TIME']} to ${group.details['SUSPENSION TIME']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Manpower</div>
+                                <div class="summary-value">${manpowerCount}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Equipment</div>
+                                <div class="summary-value">${equipmentCount}</div>
+                            </div>
+                        </div>
                         
-                        <h4>Resources</h4>
-                        <table>
-                            <tr>
-                                <th>Resource ID</th>
-                                <th>Time-In</th>
-                                <th>Time-Out</th>
-                            </tr>
-                            ${group.resources.map(resource => `
+                        <h3>Work Description</h3>
+                        <div class="work-description">${group.details['DESCRIPTION OF WORK'].replace(/"/g, '')}</div>
+                        
+                        <h3>Resource Details</h3>
+                        <table class="resource-table">
+                            <thead>
                                 <tr>
-                                    <td>${resource['RESOURCE ID']}</td>
-                                    <td>${resource['TIME-IN']}</td>
-                                    <td>${resource['TIME-OUT']}</td>
+                                    <th>#</th>
+                                    <th>Resource ID</th>
+                                    <th>Designation</th>
+                                    <th>Type</th>
+                                    <th>Time-In</th>
+                                    <th>Time-Out</th>
                                 </tr>
-                            `).join('')}
+                            </thead>
+                            <tbody>
+                                ${group.resources.map((resource, index) => `
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${resource['RESOURCE ID']}</td>
+                                        <td>${resource['RESOURCE DESIGNATION'] || '-'}</td>
+                                        <td>${resource['MANPOWER / EQUIPMENT'] || '-'}</td>
+                                        <td>${resource['TIME-IN'] || '-'}</td>
+                                        <td>${resource['TIME-OUT'] || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
                         </table>
-                        <hr>
                     </div>
                 `;
+                groupCounter++;
             });
             
             container.innerHTML = html;
