@@ -8,6 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            line-height: 1.6;
         }
         .container {
             max-width: 1200px;
@@ -15,41 +16,165 @@
         }
         h1 {
             color: #333;
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .date-picker {
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
             margin: 20px 0;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-label {
+            font-weight: bold;
+            min-width: 80px;
+        }
+        .date-picker, .area-select {
             padding: 10px;
             font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 200px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #4CAF50;
+            color: white;
             position: sticky;
             top: 0;
         }
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f2f2f2;
         }
         .no-data {
             color: #666;
             font-style: italic;
             margin: 20px 0;
+            text-align: center;
+            padding: 20px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+        }
+        .work-group {
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        .work-group-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .work-group-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .work-group-id {
+            background-color: white;
+            color: #4CAF50;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .work-description {
+            white-space: pre-line;
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .resource-table {
+            margin-top: 15px;
+        }
+        .summary-card {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .summary-item {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 10px 15px;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .summary-value {
+            font-weight: bold;
+            color: #333;
+        }
+        @media (max-width: 768px) {
+            .filter-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            .date-picker, .area-select {
+                width: 100%;
+            }
+            .summary-item {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Work Report Viewer</h1>
-        <input type="date" id="reportDate" class="date-picker" onchange="filterDataByDate()">
+        
+        <div class="filter-container">
+            <div class="filter-group">
+                <span class="filter-label">Date:</span>
+                <input type="date" id="reportDate" class="date-picker" onchange="applyFilters()">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Area/Block:</span>
+                <select id="areaSelect" class="area-select" onchange="applyFilters()">
+                    <option value="all">All Areas</option>
+                    <option value="Safha (Block-9)">Safha (Block-9)</option>
+                    <option value="Block-62">Block-62</option>
+                    <option value="Other">Other</option>
+                    <option value="Wadi Latham (Block-9)">Wadi Latham (Block-9)</option>
+                    <option value="Infrastructure Project">Infrastructure Project</option>
+                    <option value="Khamila (Bock-27)">Khamila (Bock-27)</option>
+                    <option value="FRT Project">FRT Project</option>
+                    <option value="Power Project">Power Project</option>
+                </select>
+            </div>
+        </div>
         
         <div id="reportContainer">
             <!-- Data will be displayed here -->
@@ -57,8 +182,8 @@
     </div>
 
     <script>
-        // Replace this with your published Google Sheets CSV URL
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRl2ATkqwgFtRso2xwJ2nUKHTn9aj3LZKXft7Oy9rh7iojfLWsmoTu7NliI6bpoCVNzzYtvDfNkyjef/pub?gid=0&single=true&output=csv';
+        // Your published Google Sheets CSV URL
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gLqzfOxQybJBYdtMmtBJdYWb1EPkUcC7p-py4kiEaFO0Yre3gCtpetkg7X-XY19dVI-6dTydkJYm/pub?gid=0&single=true&output=csv';
         
         let allData = [];
         
@@ -67,8 +192,8 @@
             loadData();
             
             // Set today's date as default
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('reportDate').value = today;
+            const today = new Date();
+            document.getElementById('reportDate').valueAsDate = today;
         };
         
         function loadData() {
@@ -77,8 +202,9 @@
                 .then(csvData => {
                     // Parse CSV data
                     allData = parseCSV(csvData);
-                    // Filter with today's date initially
-                    filterDataByDate();
+                    
+                    // Apply filters initially
+                    applyFilters();
                 })
                 .catch(error => {
                     console.error('Error loading data:', error);
@@ -89,44 +215,120 @@
         
         function parseCSV(csv) {
             const lines = csv.split('\n');
-            const headers = lines[0].split(',');
+            const headers = lines[0].split(',').map(h => h.trim());
             
             return lines.slice(1).map(line => {
-                const values = line.split(',');
+                // Handle quoted fields with commas
+                const values = [];
+                let inQuotes = false;
+                let currentValue = '';
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(currentValue.trim());
+                        currentValue = '';
+                    } else {
+                        currentValue += char;
+                    }
+                }
+                values.push(currentValue.trim());
+                
                 let obj = {};
                 headers.forEach((header, i) => {
-                    header = header.trim();
                     obj[header] = values[i] ? values[i].trim() : '';
                 });
                 return obj;
             });
         }
         
-        function filterDataByDate() {
-            const selectedDate = document.getElementById('reportDate').value;
-            const formattedDate = selectedDate; // Already in YYYY-MM-DD format
+        function applyFilters() {
+            const selectedDate = document.getElementById('reportDate').valueAsDate;
+            const selectedArea = document.getElementById('areaSelect').value;
             
-            const filteredData = allData.filter(row => row.DATE === formattedDate);
+            if (!selectedDate) return;
+            
+            const formattedSelectedDate = formatDateForComparison(selectedDate);
+            
+            const filteredData = allData.filter(row => {
+                if (!row.DATE) return false;
+                
+                // Date filtering
+                const rowDate = parseSheetDate(row.DATE);
+                if (!rowDate) return false;
+                const formattedRowDate = formatDateForComparison(rowDate);
+                if (formattedRowDate !== formattedSelectedDate) return false;
+                
+                // Area filtering
+                if (selectedArea !== 'all' && row['AREA / BLOCK'] !== selectedArea) {
+                    return false;
+                }
+                
+                return true;
+            });
             
             displayData(filteredData);
+        }
+        
+        // Parse dates from sheet (handles both "27-Mar-2025" and "27-03-2025" formats)
+        function parseSheetDate(dateString) {
+            if (!dateString) return null;
+            
+            // Try DD-MMM-YYYY format (e.g., 27-Mar-2025)
+            const months = {
+                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+            };
+            
+            const mmmFormat = dateString.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+            if (mmmFormat) {
+                const day = parseInt(mmmFormat[1], 10);
+                const month = months[mmmFormat[2]];
+                const year = parseInt(mmmFormat[3], 10);
+                return new Date(year, month, day);
+            }
+            
+            // Try DD-MM-YYYY format (e.g., 27-03-2025)
+            const ddFormat = dateString.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+            if (ddFormat) {
+                const day = parseInt(ddFormat[1], 10);
+                const month = parseInt(ddFormat[2], 10) - 1; // Months are 0-indexed
+                const year = parseInt(ddFormat[3], 10);
+                return new Date(year, month, day);
+            }
+            
+            return null;
+        }
+        
+        // Format date for comparison (YYYY-MM-DD)
+        function formatDateForComparison(date) {
+            if (!date) return '';
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
         
         function displayData(data) {
             const container = document.getElementById('reportContainer');
             
             if (data.length === 0) {
-                container.innerHTML = '<p class="no-data">No records found for the selected date.</p>';
+                container.innerHTML = '<p class="no-data">No records found for the selected filters.</p>';
                 return;
             }
             
-            // Group by work description (assuming same description means same work)
+            // Group by work description and permit number
             const groupedData = {};
             data.forEach(row => {
-                const key = `${row['DESCRIPTION OF WORK']}|${row['PERMIT NUMBER']}`;
+                const key = `${row['DESCRIPTION OF WORK']}|${row['PERMIT NUMBER']}|${row['WI NO']}|${row['FOREMAN ID']}`;
                 if (!groupedData[key]) {
                     groupedData[key] = {
                         details: {
                             'FOREMAN ID': row['FOREMAN ID'],
+                            'FOREMAN NAME': row['RESOURCE DESIGNATION'], // Using designation as foreman name
                             'WI NO': row['WI NO'],
                             'AREA / BLOCK': row['AREA / BLOCK'],
                             'DESCRIPTION OF WORK': row['DESCRIPTION OF WORK'],
@@ -137,60 +339,102 @@
                         resources: []
                     };
                 }
-                groupedData[key].resources.push({
-                    'RESOURCE ID': row['RESOURCE ID'],
-                    'TIME-IN': row['TIME-IN'],
-                    'TIME-OUT': row['TIME-OUT']
-                });
+                // Only add resources that aren't the foreman
+                if (row['RESOURCE ID'] !== row['FOREMAN ID']) {
+                    groupedData[key].resources.push({
+                        'RESOURCE ID': row['RESOURCE ID'],
+                        'MANPOWER / EQUIPMENT': row['MANPOWER / EQUIPMENT'],
+                        'TIME-IN': row['TIME-IN'],
+                        'TIME-OUT': row['TIME-OUT']
+                    });
+                }
             });
             
             // Generate HTML
             let html = '';
+            let groupCounter = 1;
             
             Object.values(groupedData).forEach(group => {
+                // Count different types of resources
+                const manpowerCount = group.resources.filter(r => 
+                    r['MANPOWER / EQUIPMENT'] && 
+                    r['MANPOWER / EQUIPMENT'].toLowerCase() !== 'equipment' && 
+                    r['MANPOWER / EQUIPMENT'].toLowerCase() !== '-'
+                ).length;
+                
+                const equipmentCount = group.resources.filter(r => 
+                    r['MANPOWER / EQUIPMENT'] && 
+                    (r['MANPOWER / EQUIPMENT'].toLowerCase() === 'equipment' || 
+                     r['MANPOWER / EQUIPMENT'].toLowerCase() === '-')
+                ).length;
+                
                 html += `
                     <div class="work-group">
-                        <h3>Work Details</h3>
-                        <table>
-                            <tr>
-                                <th>Foreman ID</th>
-                                <th>WI NO</th>
-                                <th>Area/Block</th>
-                                <th>Permit Number</th>
-                                <th>Validation Time</th>
-                                <th>Suspension Time</th>
-                            </tr>
-                            <tr>
-                                <td>${group.details['FOREMAN ID']}</td>
-                                <td>${group.details['WI NO']}</td>
-                                <td>${group.details['AREA / BLOCK']}</td>
-                                <td>${group.details['PERMIT NUMBER']}</td>
-                                <td>${group.details['VALIDATION TIME']}</td>
-                                <td>${group.details['SUSPENSION TIME']}</td>
-                            </tr>
-                        </table>
+                        <div class="work-group-header">
+                            <span class="work-group-title">Work Group #${groupCounter}</span>
+                            <span class="work-group-id">WI NO: ${group.details['WI NO']}</span>
+                        </div>
                         
-                        <h4>Work Description</h4>
-                        <p>${group.details['DESCRIPTION OF WORK'].replace(/\n/g, '<br>')}</p>
+                        <div class="summary-card">
+                            <div class="summary-item">
+                                <div class="summary-label">Foreman ID</div>
+                                <div class="summary-value">${group.details['FOREMAN ID']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Foreman Name</div>
+                                <div class="summary-value">${group.details['FOREMAN NAME'] || '-'}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Area/Block</div>
+                                <div class="summary-value">${group.details['AREA / BLOCK']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Permit Number</div>
+                                <div class="summary-value">${group.details['PERMIT NUMBER']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Work Hours</div>
+                                <div class="summary-value">${group.details['VALIDATION TIME']} to ${group.details['SUSPENSION TIME']}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Manpower</div>
+                                <div class="summary-value">${manpowerCount}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Equipment</div>
+                                <div class="summary-value">${equipmentCount}</div>
+                            </div>
+                        </div>
                         
-                        <h4>Resources</h4>
-                        <table>
-                            <tr>
-                                <th>Resource ID</th>
-                                <th>Time-In</th>
-                                <th>Time-Out</th>
-                            </tr>
-                            ${group.resources.map(resource => `
+                        <h3>Work Description</h3>
+                        <div class="work-description">${group.details['DESCRIPTION OF WORK'].replace(/"/g, '')}</div>
+                        
+                        <h3>Resource Details</h3>
+                        <table class="resource-table">
+                            <thead>
                                 <tr>
-                                    <td>${resource['RESOURCE ID']}</td>
-                                    <td>${resource['TIME-IN']}</td>
-                                    <td>${resource['TIME-OUT']}</td>
+                                    <th>#</th>
+                                    <th>Resource ID</th>
+                                    <th>Type</th>
+                                    <th>Time-In</th>
+                                    <th>Time-Out</th>
                                 </tr>
-                            `).join('')}
+                            </thead>
+                            <tbody>
+                                ${group.resources.map((resource, index) => `
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${resource['RESOURCE ID']}</td>
+                                        <td>${resource['MANPOWER / EQUIPMENT'] || '-'}</td>
+                                        <td>${resource['TIME-IN'] || '-'}</td>
+                                        <td>${resource['TIME-OUT'] || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
                         </table>
-                        <hr>
                     </div>
                 `;
+                groupCounter++;
             });
             
             container.innerHTML = html;
