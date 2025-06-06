@@ -679,7 +679,7 @@
             fetch(SHEET_URL)
                 .then(response => response.text())
                 .then(csvData => {
-                    // Parse CSV data
+                    // Parse CSV data with improved parser
                     allData = parseCSV(csvData);
                     
                     // Apply filters initially
@@ -698,35 +698,50 @@
         }
         
         function parseCSV(csv) {
-            const lines = csv.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
+            // Improved CSV parser that handles multi-line fields
+            const lines = [];
+            let currentLine = [];
+            let inQuotes = false;
+            let currentField = '';
             
-            return lines.slice(1).map(line => {
-                // Handle quoted fields with commas
-                const values = [];
-                let inQuotes = false;
-                let currentValue = '';
+            for (let i = 0; i < csv.length; i++) {
+                const char = csv[i];
                 
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        values.push(currentValue.trim());
-                        currentValue = '';
-                    } else {
-                        currentValue += char;
-                    }
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    currentLine.push(currentField.trim());
+                    currentField = '';
+                } else if (char === '\n' && !inQuotes) {
+                    currentLine.push(currentField.trim());
+                    lines.push(currentLine);
+                    currentLine = [];
+                    currentField = '';
+                } else {
+                    currentField += char;
                 }
-                values.push(currentValue.trim());
-                
-                let obj = {};
-                headers.forEach((header, i) => {
-                    obj[header] = values[i] ? values[i].trim() : '';
-                });
-                return obj;
-            });
+            }
+            
+            // Add the last line
+            if (currentField.trim() !== '' || currentLine.length > 0) {
+                currentLine.push(currentField.trim());
+                lines.push(currentLine);
+            }
+            
+            if (lines.length === 0) return [];
+            
+            const headers = lines[0];
+            const result = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const obj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = lines[i][j] || '';
+                }
+                result.push(obj);
+            }
+            
+            return result;
         }
         
         function applyFilters() {
@@ -781,6 +796,15 @@
                 const year = parseInt(yyyyFormat[1], 10);
                 const month = parseInt(yyyyFormat[2], 10) - 1; // Months are 0-indexed
                 const day = parseInt(yyyyFormat[3], 10);
+                return new Date(year, month, day);
+            }
+            
+            // Try DD/MM/YYYY format (e.g., 05/06/2025)
+            const ddmmFormat = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (ddmmFormat) {
+                const day = parseInt(ddmmFormat[1], 10);
+                const month = parseInt(ddmmFormat[2], 10) - 1; // Months are 0-indexed
+                const year = parseInt(ddmmFormat[3], 10);
                 return new Date(year, month, day);
             }
             
