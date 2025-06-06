@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPS Work Report</title>
+    <title>GPS Work Report Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -62,7 +62,6 @@
         .logo {
             height: 50px;
             margin-right: 20px;
-            filter: brightness(0) invert(1);
         }
         
         .company-info {
@@ -520,6 +519,18 @@
             font-style: italic;
         }
         
+        .summary-date-filter {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .summary-date-label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
         @media (max-width: 1200px) {
             .summary-grid {
                 grid-template-columns: 1fr;
@@ -578,6 +589,11 @@
             .summary-card {
                 grid-template-columns: 1fr 1fr;
             }
+            
+            .summary-date-filter {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
         
         @media (max-width: 576px) {
@@ -624,30 +640,32 @@
         </div>
 
         <div id="summary" class="tab-content active">
-            <h1>Work Summary & Analytics</h1>
+            <h1>Work Analytics Dashboard</h1>
+            
+            <div class="summary-date-filter">
+                <span class="summary-date-label"><i class="far fa-calendar-alt"></i> Date Range:</span>
+                <input type="date" id="summaryStartDate" class="date-picker" onchange="updateSummaryCharts()">
+                <span>to</span>
+                <input type="date" id="summaryEndDate" class="date-picker" onchange="updateSummaryCharts()">
+            </div>
             
             <div id="summaryLoading" class="loading-container">
                 <div class="loading-spinner"></div>
                 <div class="loading-text">Loading Summary Data</div>
-                <div class="loading-subtext">Please wait while we process your information</div>
+                <div class="loading-subtext">Analyzing work patterns and crew distributions</div>
             </div>
             
             <div id="summaryContent" style="display: none;">
                 <div class="summary-grid">
                     <div>
                         <div class="chart-card">
-                            <div class="chart-title">Work Hours Distribution</div>
-                            <canvas id="hoursChart"></canvas>
+                            <div class="chart-title">Daily Crew Allocation by Area</div>
+                            <canvas id="crewAllocationChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
-                            <div class="chart-title">Manpower vs Equipment</div>
-                            <canvas id="resourceTypeChart"></canvas>
-                        </div>
-                        
-                        <div class="chart-card">
-                            <div class="chart-title">Top Areas by Activity</div>
-                            <canvas id="areaChart"></canvas>
+                            <div class="chart-title">Crew Size Trend by Area</div>
+                            <canvas id="crewTrendChart"></canvas>
                         </div>
                     </div>
                     
@@ -658,7 +676,8 @@
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Work Items</th>
+                                        <th>Foremen</th>
+                                        <th>Crew Size</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -680,8 +699,8 @@
                                     <div class="summary-value" id="activePermits">0</div>
                                 </div>
                                 <div class="summary-item">
-                                    <div class="summary-label">Avg. Work Hours</div>
-                                    <div class="summary-value" id="avgWorkHours">0</div>
+                                    <div class="summary-label">Avg. Crew Size</div>
+                                    <div class="summary-value" id="avgCrewSize">0</div>
                                 </div>
                                 <div class="summary-item">
                                     <div class="summary-label">Total Resources</div>
@@ -798,6 +817,8 @@
             // Set current date
             const today = new Date();
             document.getElementById('reportDate').valueAsDate = today;
+            document.getElementById('summaryStartDate').valueAsDate = new Date(today.setDate(today.getDate() - 7));
+            document.getElementById('summaryEndDate').valueAsDate = today;
             document.getElementById('currentDate').textContent = formatDateForDisplay(today);
             
             // Load weather data (simulated)
@@ -1489,43 +1510,65 @@
         function updateSummaryCharts() {
             if (allData.length === 0) return;
             
+            const startDate = document.getElementById('summaryStartDate').valueAsDate;
+            const endDate = document.getElementById('summaryEndDate').valueAsDate;
+            
+            if (!startDate || !endDate) return;
+            
             // Prepare data for charts
-            const last7Days = getLastNDays(7);
-            const areaCounts = {};
-            const resourceTypeCounts = { Manpower: 0, Equipment: 0 };
+            const datesInRange = getDatesInRange(startDate, endDate);
+            const areaCrewData = {};
+            const areaTrendData = {};
             const permitNumbers = new Set();
             const uniqueWorkItems = new Set();
             const resourceIds = new Set();
-            let totalWorkHours = 0;
-            let workItemsWithHours = 0;
+            let totalCrewSize = 0;
+            let workItemsCount = 0;
             
-            // Get recent activity (last 5 days)
-            const recentActivity = {};
-            last7Days.forEach(day => {
-                recentActivity[day] = {
-                    date: day,
-                    count: 0,
-                    active: false
-                };
+            // Initialize data structures
+            datesInRange.forEach(date => {
+                const dateKey = formatDateForComparison(date);
+                areaTrendData[dateKey] = {};
             });
             
+            // Process all data to get crew allocations
             allData.forEach(row => {
                 const rowDate = parseSheetDate(row.DATE);
                 if (!rowDate) return;
                 
-                const formattedDate = formatDateForDisplay(rowDate);
-                const dateKey = formatDateForComparison(rowDate);
+                const formattedRowDate = formatDateForComparison(rowDate);
+                const formattedDisplayDate = formatDateForDisplay(rowDate);
                 
-                // Count by area
+                // Skip if date is outside our range
+                if (rowDate < startDate || rowDate > endDate) return;
+                
                 const area = row['AREA / BLOCK'] || 'Unknown';
-                areaCounts[area] = (areaCounts[area] || 0) + 1;
                 
-                // Count resource types
-                const resourceType = row['MANPOWER / EQUIPMENT'] || '-';
-                if (resourceType.toLowerCase() === 'manpower') {
-                    resourceTypeCounts.Manpower++;
-                } else if (resourceType.toLowerCase() === 'equipment') {
-                    resourceTypeCounts.Equipment++;
+                // Initialize area data if not exists
+                if (!areaCrewData[area]) {
+                    areaCrewData[area] = {
+                        totalCrew: 0,
+                        dates: {},
+                        foremen: new Set()
+                    };
+                }
+                
+                // Track unique crew members per area per date
+                if (!areaCrewData[area].dates[formattedRowDate]) {
+                    areaCrewData[area].dates[formattedRowDate] = {
+                        crewSize: new Set(),
+                        foremen: new Set()
+                    };
+                }
+                
+                if (row['RESOURCE ID']) {
+                    areaCrewData[area].dates[formattedRowDate].crewSize.add(row['RESOURCE ID']);
+                    resourceIds.add(row['RESOURCE ID']);
+                }
+                
+                if (row['FOREMAN ID']) {
+                    areaCrewData[area].dates[formattedRowDate].foremen.add(row['FOREMAN ID']);
+                    areaCrewData[area].foremen.add(row['FOREMAN ID']);
                 }
                 
                 // Track unique permits and work items
@@ -1535,45 +1578,128 @@
                 if (row['WI NO']) {
                     uniqueWorkItems.add(row['WI NO']);
                 }
-                if (row['RESOURCE ID']) {
-                    resourceIds.add(row['RESOURCE ID']);
-                }
-                
-                // Calculate work hours
-                if (row['VALIDATION TIME'] && row['SUSPENSION TIME']) {
-                    const startTime = parseTime(row['VALIDATION TIME']);
-                    const endTime = parseTime(row['SUSPENSION TIME']);
-                    if (startTime && endTime) {
-                        const hours = (endTime - startTime) / (1000 * 60 * 60);
-                        if (hours > 0) {
-                            totalWorkHours += hours;
-                            workItemsWithHours++;
-                        }
+            });
+            
+            // Calculate totals and prepare trend data
+            Object.keys(areaCrewData).forEach(area => {
+                Object.keys(areaCrewData[area].dates).forEach(date => {
+                    const crewSize = areaCrewData[area].dates[date].crewSize.size;
+                    const foremenCount = areaCrewData[area].dates[date].foremen.size;
+                    totalCrewSize += crewSize;
+                    workItemsCount++;
+                    
+                    // Prepare trend data
+                    if (!areaTrendData[date][area]) {
+                        areaTrendData[date][area] = 0;
                     }
-                }
+                    areaTrendData[date][area] += crewSize;
+                });
+            });
+            
+            // Prepare data for Daily Crew Allocation chart (stacked bar)
+            const crewAllocationLabels = datesInRange.map(date => formatDateForDisplay(date));
+            const crewAllocationDatasets = [];
+            
+            // Get top 5 areas by total crew size
+            const areasByCrewSize = Object.keys(areaCrewData)
+                .map(area => ({
+                    name: area,
+                    total: Object.keys(areaCrewData[area].dates)
+                        .reduce((sum, date) => sum + areaCrewData[area].dates[date].crewSize.size, 0)
+                }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+            
+            // Create dataset for each area
+            const colors = [
+                'rgba(67, 97, 238, 0.7)',
+                'rgba(155, 89, 182, 0.7)',
+                'rgba(6, 214, 160, 0.7)',
+                'rgba(255, 209, 102, 0.7)',
+                'rgba(239, 71, 111, 0.7)'
+            ];
+            
+            areasByCrewSize.forEach((area, index) => {
+                const areaData = datesInRange.map(date => {
+                    const dateKey = formatDateForComparison(date);
+                    return areaCrewData[area.name].dates[dateKey] ? 
+                        areaCrewData[area.name].dates[dateKey].crewSize.size : 0;
+                });
                 
-                // Track recent activity
-                if (recentActivity[dateKey]) {
-                    recentActivity[dateKey].count++;
-                    recentActivity[dateKey].active = true;
-                }
+                crewAllocationDatasets.push({
+                    label: area.name,
+                    data: areaData,
+                    backgroundColor: colors[index],
+                    borderColor: colors[index].replace('0.7', '1'),
+                    borderWidth: 1
+                });
+            });
+            
+            // Prepare data for Crew Trend chart (line)
+            const trendLabels = datesInRange.map(date => formatDateForDisplay(date));
+            const trendDatasets = [];
+            
+            areasByCrewSize.forEach((area, index) => {
+                const trendData = datesInRange.map(date => {
+                    const dateKey = formatDateForComparison(date);
+                    return areaTrendData[dateKey][area.name] || 0;
+                });
+                
+                trendDatasets.push({
+                    label: area.name,
+                    data: trendData,
+                    borderColor: colors[index].replace('0.7', '1'),
+                    backgroundColor: colors[index],
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false
+                });
             });
             
             // Update quick stats
             document.getElementById('totalWorkItems').textContent = uniqueWorkItems.size;
             document.getElementById('activePermits').textContent = permitNumbers.size;
-            document.getElementById('avgWorkHours').textContent = workItemsWithHours > 0 
-                ? (totalWorkHours / workItemsWithHours).toFixed(1) + ' hrs' 
+            document.getElementById('avgCrewSize').textContent = workItemsCount > 0 
+                ? Math.round(totalCrewSize / workItemsCount) 
                 : 'N/A';
             document.getElementById('totalResources').textContent = resourceIds.size;
             
             // Update recent activity table
-            const recentActivityHtml = Object.values(recentActivity)
+            const recentActivityData = {};
+            datesInRange.forEach(date => {
+                const dateKey = formatDateForComparison(date);
+                recentActivityData[dateKey] = {
+                    date: dateKey,
+                    foremenCount: 0,
+                    crewSize: 0,
+                    active: false
+                };
+            });
+            
+            allData.forEach(row => {
+                const rowDate = parseSheetDate(row.DATE);
+                if (!rowDate) return;
+                
+                const dateKey = formatDateForComparison(rowDate);
+                
+                if (recentActivityData[dateKey]) {
+                    if (row['FOREMAN ID']) {
+                        recentActivityData[dateKey].foremenCount++;
+                    }
+                    if (row['RESOURCE ID']) {
+                        recentActivityData[dateKey].crewSize++;
+                    }
+                    recentActivityData[dateKey].active = true;
+                }
+            });
+            
+            const recentActivityHtml = Object.values(recentActivityData)
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map(day => `
                     <tr>
                         <td>${formatDateForDisplay(new Date(day.date))}</td>
-                        <td>${day.count}</td>
+                        <td>${day.foremenCount}</td>
+                        <td>${day.crewSize}</td>
                         <td><span class="status-indicator ${day.active ? 'status-active' : 'status-inactive'}"></span>
                             ${day.active ? 'Active' : 'No Activity'}</td>
                     </tr>
@@ -1581,37 +1707,59 @@
             document.getElementById('recentActivity').innerHTML = recentActivityHtml;
             
             // Destroy existing charts if they exist
-            Object.values(charts).forEach(chart => {
-                if (chart) chart.destroy();
-            });
+            if (charts.crewAllocationChart) charts.crewAllocationChart.destroy();
+            if (charts.crewTrendChart) charts.crewTrendChart.destroy();
             
             // Create or update charts
-            const ctx1 = document.getElementById('hoursChart').getContext('2d');
-            charts.hoursChart = new Chart(ctx1, {
+            const ctx1 = document.getElementById('crewAllocationChart').getContext('2d');
+            charts.crewAllocationChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(recentActivity).map(date => formatDateForDisplay(new Date(date))),
-                    datasets: [{
-                        label: 'Work Items',
-                        data: Object.values(recentActivity).map(day => day.count),
-                        backgroundColor: 'rgba(67, 97, 238, 0.7)',
-                        borderColor: 'rgba(67, 97, 238, 1)',
-                        borderWidth: 1
-                    }]
+                    labels: crewAllocationLabels,
+                    datasets: crewAllocationDatasets
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Crew Size'
+                            }
                         }
                     },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+            
+            const ctx2 = document.getElementById('crewTrendChart').getContext('2d');
+            charts.crewTrendChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: trendDatasets
+                },
+                options: {
+                    responsive: true,
                     scales: {
                         y: {
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Number of Work Items'
+                                text: 'Crew Size'
                             }
                         },
                         x: {
@@ -1620,30 +1768,7 @@
                                 text: 'Date'
                             }
                         }
-                    }
-                }
-            });
-            
-            const ctx2 = document.getElementById('resourceTypeChart').getContext('2d');
-            charts.resourceTypeChart = new Chart(ctx2, {
-                type: 'pie',
-                data: {
-                    labels: ['Manpower', 'Equipment'],
-                    datasets: [{
-                        data: [resourceTypeCounts.Manpower, resourceTypeCounts.Equipment],
-                        backgroundColor: [
-                            'rgba(6, 214, 160, 0.7)',
-                            'rgba(239, 71, 111, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(6, 214, 160, 1)',
-                            'rgba(239, 71, 111, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
+                    },
                     plugins: {
                         legend: {
                             position: 'bottom',
@@ -1651,45 +1776,18 @@
                     }
                 }
             });
+        }
+        
+        function getDatesInRange(startDate, endDate) {
+            const dates = [];
+            let currentDate = new Date(startDate);
             
-            // Sort areas by count and take top 5
-            const sortedAreas = Object.entries(areaCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
+            while (currentDate <= endDate) {
+                dates.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
             
-            const ctx3 = document.getElementById('areaChart').getContext('2d');
-            charts.areaChart = new Chart(ctx3, {
-                type: 'doughnut',
-                data: {
-                    labels: sortedAreas.map(area => area[0]),
-                    datasets: [{
-                        data: sortedAreas.map(area => area[1]),
-                        backgroundColor: [
-                            'rgba(67, 97, 238, 0.7)',
-                            'rgba(155, 89, 182, 0.7)',
-                            'rgba(6, 214, 160, 0.7)',
-                            'rgba(255, 209, 102, 0.7)',
-                            'rgba(239, 71, 111, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(67, 97, 238, 1)',
-                            'rgba(155, 89, 182, 1)',
-                            'rgba(6, 214, 160, 1)',
-                            'rgba(255, 209, 102, 1)',
-                            'rgba(239, 71, 111, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        }
-                    }
-                }
-            });
+            return dates;
         }
         
         function getLastNDays(n) {
