@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -76,6 +37,10 @@
             background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
@@ -118,6 +83,23 @@
 
         .company-info strong {
             font-weight: 500;
+        }
+
+        .logout-button {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: white;
+            background: var(--warning-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .logout-button:hover {
+            box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .tabs {
@@ -352,7 +334,7 @@
         }
 
         .summary-value {
-            font-weight: 700 coleta
+            font-weight: 700;
             color: var(--dark-color);
             font-size: 1.1rem;
         }
@@ -526,7 +508,6 @@
 
         .login-container {
             max-width: 400px;
-            margin: 5rem auto;
             padding: 2rem;
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -535,11 +516,9 @@
             text-align: center;
         }
 
-        .login-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+        .login-logo {
+            max-width: 150px;
             margin-bottom: 1.5rem;
-            color: var(--dark-color);
         }
 
         .login-form {
@@ -657,7 +636,7 @@
             }
 
             .login-container {
-                margin: 2rem;
+                margin: 1rem;
                 padding: 1.5rem;
             }
         }
@@ -675,7 +654,7 @@
 </head>
 <body>
     <div id="login-container" class="login-container">
-        <h1 class="login-title">GPS Dashboard Login</h1>
+        <img src="https://justingps.github.io/dpr/logo.png" alt="Company Logo" class="login-logo">
         <div class="login-form">
             <input type="text" id="username" class="login-input" placeholder="Username" autocomplete="off">
             <input type="password" id="password" class="login-input" placeholder="Password">
@@ -689,13 +668,13 @@
             <div class="logo-container">
                 <img src="https://justingps.github.io/dpr/logo.png" alt="Company Logo" class="logo">
                 <div class="company-info">
-                    <部分
                     <div><strong>CONTRACTOR:</strong> GULF PETROCHEMICAL SERVICES LLC.</div>
                     <div><strong>CLIENT:</strong> OXY - OCCIDENTAL OF OMAN INC.</div>
                     <div><strong>CONTRACT:</strong> GFSC - MASTER INTEGRATED SERVICES AGREEMENT No. 24000110790</div>
                     <div><strong>TODAY:</strong> <span id="currentDate"></span></div>
                 </div>
             </div>
+            <button class="logout-button" onclick="handleLogout()">Logout</button>
         </div>
 
         <div class="tabs">
@@ -811,6 +790,7 @@
                 showDashboard();
             } else {
                 document.getElementById('login-container').style.display = 'block';
+                document.body.style.display = 'flex';
             }
         };
 
@@ -827,11 +807,22 @@
             }
         }
 
+        function handleLogout() {
+            sessionStorage.removeItem('isLoggedIn');
+            document.getElementById('dashboard-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+            document.body.style.display = 'flex';
+        }
+
         function showDashboard() {
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('dashboard-container').style.display = 'block';
+            document.body.style.display = 'block';
 
-            // Initialize dashboard (original window.onload logic)
+            // Initialize dashboard
             const today = new Date();
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(today.getDate() - 7);
