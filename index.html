@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPS Dashboard</title>
+    <link rel="icon" href="https://justingps.github.io/dpr/logo.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -37,10 +38,91 @@
             background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.5;
-            height: 100vh;
+        }
+
+        /* Login Page Styles */
+        .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
+            background-color: var(--background-color);
+        }
+
+        .login-form {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-logo {
+            height: 80px;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .login-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .company-footer {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Logout Button */
+        .logout-button {
+            background: linear-gradient(145deg, var(--accent-color), #be185d);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 4px var(--shadow-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-button:hover {
+            background: linear-gradient(145deg, #be185d, var(--accent-color));
+            box-shadow: 2px 2px 6px var(--shadow-dark);
         }
 
         .container {
@@ -49,8 +131,9 @@
             background-color: var(--card-bg);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 6px 6px 12px var(--shadow-dark),
+            box-shadow: 6px 12px 12px var(--shadow-dark),
                         -6px -6px 12px var(--shadow-light);
+            display: none; /* Initially hidden until login */
         }
 
         .header {
@@ -85,23 +168,6 @@
             font-weight: 500;
         }
 
-        .logout-button {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: white;
-            background: var(--warning-color);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .logout-button:hover {
-            box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
         .tabs {
             display: flex;
             background-color: var(--card-bg);
@@ -119,7 +185,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin: 0.3rem;
+            margin: 0.25rem;
             border-radius: 8px;
             background: var(--card-bg);
             box-shadow: 4px 4px 8px var(--shadow-dark),
@@ -129,13 +195,13 @@
         .tab:hover {
             background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
             color: white;
-            box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.0);
         }
 
         .tab.active {
             background: var(--card-bg);
             color: var(--primary-color);
-            font-weight: 500;
+            font-weight: bold 500;
             box-shadow: inset 4px 4px 8px var(--shadow-dark),
                         inset -4px -4px 8px var(--shadow-light);
         }
@@ -207,7 +273,7 @@
             white-space: nowrap;
         }
 
-        .date-picker, .area-select, .wi-input {
+        .date-picker, .area-select, .discipline-select, .wi-input {
             padding: 0.6rem;
             font-size: 0.85rem;
             border: none;
@@ -220,7 +286,7 @@
             transition: all 0.2s ease;
         }
 
-        .date-picker:focus, .area-select:focus, .wi-input:focus {
+        .date-picker:focus, .area-select:focus, .discipline-select:focus, .wi-input:focus {
             outline: none;
             box-shadow: inset 1px 1px 2px var(--shadow-dark),
                         inset -1px -1px 2px var(--shadow-light),
@@ -283,12 +349,12 @@
             line-height: 1.5;
         }
 
-        .resource-table {
+        .resource-table, .progress-table, .status-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .resource-table th {
+        .resource-table th, .progress-table th, .status-table th {
             background-color: var(--light-color);
             color: var(--dark-color);
             padding: 0.7rem;
@@ -297,16 +363,16 @@
             font-size: 0.8rem;
         }
 
-        .resource-table td {
+        .resource-table td, .progress-table td, .status-table td {
             padding: 0.7rem;
             font-size: 0.8rem;
         }
 
-        .resource-table tr:last-child td {
+        .resource-table tr:last-child td, .progress-table tr:last-child td, .status-table tr:last-child td {
             border-bottom: none;
         }
 
-        .resource-table tr:hover {
+        .resource-table tr:hover, .progress-table tr:hover, .status-table tr:hover {
             background-color: rgba(37, 99, 235, 0.1);
         }
 
@@ -506,68 +572,19 @@
             font-size: 0.85rem;
         }
 
-        .login-container {
-            max-width: 400px;
-            padding: 2rem;
+        .details-card {
             background-color: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 6px 6px 12px var(--shadow-dark),
-                        -6px -6px 12px var(--shadow-light);
-            text-align: center;
-        }
-
-        .login-logo {
-            max-width: 100px;
-            margin-bottom: 1.5rem;
-        }
-
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .login-input {
-            padding: 0.6rem;
-            font-size: 0.85rem;
-            border: none;
             border-radius: 8px;
-            background-color: var(--card-bg);
-            font-family: 'Inter', sans-serif;
-            box-shadow: inset 2px 2px 4px var(--shadow-dark),
-                        inset -2px -2px 4px var(--shadow-light);
-            transition: all 0.2s ease;
+            padding: 1rem;
+            margin: 1rem;
+            box-shadow: 4px 4px 8px var(--shadow-dark),
+                        -4px -4px 8px var(--shadow-light);
         }
 
-        .login-input:focus {
-            outline: none;
-            box-shadow: inset 1px 1px 2px var(--shadow-dark),
-                        inset -1px -1px 2px var(--shadow-light),
-                        0 0 0 2px var(--primary-color);
-        }
-
-        .login-button {
-            padding: 0.8rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: white;
-            background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .login-button:hover {
-            box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .login-error {
-            color: var(--warning-color);
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-            display: none;
+        .details-card h3 {
+            margin: 0 0 0.8rem;
+            font-size: 1rem;
+            color: var(--dark-color);
         }
 
         @media (max-width: 1200px) {
@@ -609,7 +626,7 @@
                 margin-bottom: 0.3rem;
             }
 
-            .date-picker, .area-select, .wi-input {
+            .date-picker, .area-select, .discipline-select, .wi-input {
                 width: 100%;
             }
 
@@ -634,11 +651,6 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
-
-            .login-container {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
         }
 
         @media (max-width: 576px) {
@@ -653,33 +665,39 @@
     </style>
 </head>
 <body>
-    <div id="login-container" class="login-container">
-        <img src="https://justingps.github.io/dpr/logo.png" alt="Company Logo" class="login-logo">
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
         <div class="login-form">
-            <input type="text" id="username" class="login-input" placeholder="Username" autocomplete="off">
-            <input type="password" id="password" class="login-input" placeholder="Password">
-            <button class="login-button" onclick="handleLogin()">Login</button>
-            <div id="login-error" class="login-error">Invalid username or password</div>
+            <img src="https://justingps.github.io/dpr/logo.png" alt="Company Logo" class="login-logo">
+            <input type="text" id="username" class="login-input" placeholder="Username" required>
+            <input type="password" id="password" class="login-input" placeholder="Password" required>
+            <button class="login-button" onclick="login()">Login</button>
+            <div class="company-footer">Gulf Petrochemical Services LLC.</div>
         </div>
     </div>
 
-    <div id="dashboard-container" class="container" style="display: none;">
+    <!-- Dashboard Container (hidden initially) -->
+    <div class="container" id="dashboardContainer">
         <div class="header">
             <div class="logo-container">
                 <img src="https://justingps.github.io/dpr/logo.png" alt="Company Logo" class="logo">
                 <div class="company-info">
                     <div><strong>CONTRACTOR:</strong> GULF PETROCHEMICAL SERVICES LLC.</div>
-                    <div><strong>CLIENT:</strong> OXY - OCCIDENTAL OF OMAN INC.</div>
+                    <div><strong>CLIENT:</strong> OCCIDENTAL OF OMAN INC.</div>
                     <div><strong>CONTRACT:</strong> GFSC - MASTER INTEGRATED SERVICES AGREEMENT No. 24000110790</div>
                     <div><strong>TODAY:</strong> <span id="currentDate"></span></div>
                 </div>
             </div>
-            <button class="logout-button" onclick="handleLogout()">Logout</button>
+            <button class="logout-button" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
         </div>
 
         <div class="tabs">
             <div class="tab active" onclick="openTab('summary')"><i class="fas fa-chart-bar"></i> Summary</div>
             <div class="tab" onclick="openTab('reports')"><i class="fas fa-file-alt"></i> Reports</div>
+            <div class="tab" onclick="openTab('status')"><i class="fas fa-table"></i> Status</div>
+            <div class="tab" onclick="openTab('resource')"><i class="fas fa-users"></i> Resource</div>
         </div>
 
         <div id="summary" class="tab-content active">
@@ -702,17 +720,17 @@
                 <div class="summary-grid">
                     <div>
                         <div class="chart-card">
-                            <div class="chart-title">Daily Crew Reporting by Area</div>
+                            <div class="chart-title">Daily Crew Allocation by Area</div>
                             <canvas id="crewAllocationChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
-                            <div class="chart-title">Reporting Trend by Area</div>
+                            <div class="chart-title">Crew Size Trend by Area</div>
                             <canvas id="crewTrendChart"></canvas>
                         </div>
 
                         <div class="chart-card">
-                            <div class="chart-title">Top 5 Projects by Crew Utilization</div>
+                            <div class="chart-title">Top 5 Work Groups by Crew Utilization</div>
                             <canvas id="workGroupUtilizationChart"></canvas>
                         </div>
                     </div>
@@ -760,6 +778,16 @@
                     </select>
                 </div>
                 <div class="filter-group">
+                    <span class="filter-label"><i class="fas fa-cogs"></i> Discipline:</span>
+                    <select id="disciplineSelect" class="discipline-select" onchange="applyFilters()">
+                        <option value="all">All Disciplines</option>
+                        <option value="Piping & Mechanical">Piping & Mechanical</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Civil">Civil</option>
+                        <option value="Instrumentation">Instrumentation</option>
+                    </select>
+                </div>
+                <div class="filter-group">
                     <span class="filter-label"><i class="fas fa-search"></i> WI:</span>
                     <input type="text" id="wiInput" class="wi-input" placeholder="Search WI..." oninput="applyFilters()">
                 </div>
@@ -781,86 +809,294 @@
                 </div>
             </div>
         </div>
+
+        <div id="status" class="tab-content">
+            <h1>Active Projects Status</h1>
+            
+            <div class="filter-container">
+                <div class="filter-group">
+                    <span class="filter-label"><i class="far fa-calendar-alt"></i> Select Date:</span>
+                    <input type="date" id="statusDate" class="date-picker" onchange="updateStatusTable()">
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label"><i class="fas fa-map-marker-alt"></i> Area/Block:</span>
+                    <select id="statusAreaSelect" class="area-select" onchange="updateStatusTable()">
+                        <option value="all">All Areas</option>
+                        <option value="Safha (Block-9)">Safha (Block-9)</option>
+                        <option value="Block-62">Block-62</option>
+                        <option value="Other">Other</option>
+                        <option value="Wadi Latham (Block-9)">Wadi Latham (Block-9)</option>
+                        <option value="Infrastructure Project">Infrastructure Project</option>
+                        <option value="Khamila (Bock-27)">Khamila (Bock-27)</option>
+                        <option value="FRT Project">FRT Project</option>
+                        <option value="Power Project">Power Project</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="statusLoading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading Status Data</div>
+                <div class="loading-subtext">Fetching active projects information</div>
+            </div>
+            
+            <div id="statusContent" style="display: none;">
+                <div class="details-card">
+                    <h3 id="statusTableTitle">Active Projects on [Selected Date]</h3>
+                    <div class="summary-card">
+                        <div class="summary-item">
+                            <div class="summary-label">Total Projects</div>
+                            <div id="totalProjects" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Total Crew Size</div>
+                            <div id="totalCrewSize" class="summary-value">0</div>
+                        </div>
+                    </div>
+                    <table class="status-table">
+                        <thead>
+                            <tr>
+                                <th>SL. NO.</th>
+                                <th>ID</th>
+                                <th>CREW LEAD</th>
+                                <th>PROJECTS</th>
+                                <th>AREA</th>
+                                <th>CREW SIZE</th>
+                                <th>DISCIPLINE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusTableBody">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="resource" class="tab-content">
+            <h1>Resource Allocation</h1>
+            
+            <div class="filter-container">
+                <div class="filter-group">
+                    <span class="filter-label"><i class="far fa-calendar-alt"></i> Select Date:</span>
+                    <input type="date" id="resourceDate" class="date-picker" onchange="updateResourceTables()">
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label"><i class="fas fa-map-marker-alt"></i> Area/Block:</span>
+                    <select id="resourceAreaSelect" class="area-select" onchange="updateResourceTables()">
+                        <option value="all">All Areas</option>
+                        <option value="Safha (Block-9)">Safha (Block-9)</option>
+                        <option value="Block-62">Block-62</option>
+                        <option value="Other">Other</option>
+                        <option value="Wadi Latham (Block-9)">Wadi Latham (Block-9)</option>
+                        <option value="Infrastructure Project">Infrastructure Project</option>
+                        <option value="Khamila (Bock-27)">Khamila (Bock-27)</option>
+                        <option value="FRT Project">FRT Project</option>
+                        <option value="Power Project">Power Project</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="resourceLoading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading Resource Data</div>
+                <div class="loading-subtext">Fetching resource allocation details</div>
+            </div>
+            
+            <div id="resourceContent" style="display: none;">
+                <div class="details-card">
+                    <h3 id="resourceTableTitle">Resources on [Selected Date]</h3>
+                    <div class="summary-card">
+                        <div class="summary-item">
+                            <div class="summary-label">Total Manpower</div>
+                            <div id="totalManpower" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Total Equipment</div>
+                            <div id="totalEquipment" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Not Found</div>
+                            <div id="totalNotFound" class="summary-value">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="details-card">
+                        <h3>Manpower Resources</h3>
+                        <table class="resource-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Resource ID</th>
+                                    <th>Designation</th>
+                                    <th>Project (WI NO)</th>
+                                    <th>Area</th>
+                                    <th>Foreman</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manpowerTableBody">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="details-card">
+                        <h3>Equipment Resources</h3>
+                        <table class="resource-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Resource ID</th>
+                                    <th>Designation</th>
+                                    <th>Project (WI NO)</th>
+                                    <th>Area</th>
+                                    <th>Foreman</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipmentTableBody">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="details-card">
+                        <h3>Not Found Resources</h3>
+                        <table class="resource-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Resource ID</th>
+                                    <th>Designation</th>
+                                    <th>Project (WI NO)</th>
+                                    <th>Area</th>
+                                    <th>Foreman</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notFoundTableBody">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Check login status on page load
-        window.onload = function() {
-            if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                showDashboard();
-            } else {
-                document.getElementById('login-container').style.display = 'block';
-                document.body.style.display = 'flex';
-            }
-        };
-
-        function handleLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('login-error');
-
-            if (username === 'admin' && password === 'admin') {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                showDashboard();
-            } else {
-                errorDiv.style.display = 'block';
-            }
-        }
-
-        function handleLogout() {
-            sessionStorage.removeItem('isLoggedIn');
-            document.getElementById('dashboard-container').style.display = 'none';
-            document.getElementById('login-container').style.display = 'block';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('login-error').style.display = 'none';
-            document.body.style.display = 'flex';
-        }
-
-        function showDashboard() {
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('dashboard-container').style.display = 'block';
-            document.body.style.display = 'block';
-
-            // Initialize dashboard
-            const today = new Date();
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(today.getDate() - 7);
-            
-            document.getElementById('reportDate').valueAsDate = today;
-            document.getElementById('summaryStartDate').valueAsDate = oneWeekAgo;
-            document.getElementById('summaryEndDate').valueAsDate = today;
-            document.getElementById('currentDate').textContent = formatDateForDisplay(today);
-            
-            loadData();
-        }
-
-        // Your published Google Sheets CSV URL
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYGYKtfTtxPYNafZF8fBcJfmMXPFUbltmTC-TKE4dK-GTIicfg13FSUEtIZ-iMC6Xy2vtxV8-R4dGZ/pub?gid=1788579973&single=true&output=csv';
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMvKP4HfM5zZpM3RjdpPcX0DZA3yWpGhXt_lqpzblpbIQW7vcJswPPm8gMdmVZ366FCUwZGLCsF1fb/pub?gid=0&single=true&output=csv';
         
         let allData = [];
         let charts = {};
         
+        // Preload data when page loads (even before login)
+        window.onload = function() {
+            preloadData();
+            
+            // Set up event listener for login form submission
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+        };
+        
+        function preloadData() {
+            fetch(SHEET_URL)
+                .then(response => response.text())
+                .then(csvData => {
+                    allData = parseCSV(csvData);
+                    console.log('Data preloaded successfully');
+                })
+                .catch(error => {
+                    console.error('Error preloading data:', error);
+                });
+        }
+        
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin') {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+                
+                // Initialize dashboard after successful login
+                initializeDashboard();
+            } else {
+                alert('Invalid credentials. Please try again.');
+            }
+        }
+        
+        function logout() {
+            document.getElementById('dashboardContainer').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+            
+            // Clear form fields
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+        
+        function initializeDashboard() {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const oneWeekAgo = new Date(yesterday);
+            oneWeekAgo.setDate(yesterday.getDate() - 6); // One week range ending yesterday
+            
+            document.getElementById('reportDate').valueAsDate = yesterday;
+            document.getElementById('statusDate').valueAsDate = yesterday;
+            document.getElementById('resourceDate').valueAsDate = yesterday;
+            document.getElementById('summaryStartDate').valueAsDate = oneWeekAgo;
+            document.getElementById('summaryEndDate').valueAsDate = yesterday;
+            document.getElementById('currentDate').textContent = formatDateForDisplay(today);
+            
+            // If data is already preloaded, show it immediately
+            if (allData.length > 0) {
+                document.getElementById('summaryLoading').style.display = 'none';
+                document.getElementById('summaryContent').style.display = 'block';
+                document.getElementById('reportsLoading').style.display = 'none';
+                document.getElementById('reportsContent').style.display = 'block';
+                document.getElementById('statusLoading').style.display = 'none';
+                document.getElementById('statusContent').style.display = 'block';
+                document.getElementById('resourceLoading').style.display = 'none';
+                document.getElementById('resourceContent').style.display = 'block';
+                
+                applyFilters();
+                if (document.getElementById('status').classList.contains('active')) {
+                    updateStatusTable();
+                }
+                if (document.getElementById('summary').classList.contains('active')) {
+                    updateSummaryCharts();
+                }
+                if (document.getElementById('resource').classList.contains('active')) {
+                    updateResourceTables();
+                }
+            } else {
+                // If data isn't preloaded yet, load it now
+                loadData();
+            }
+        }
+        
         function openTab(tabName) {
-            // Hide all tab contents
             const tabContents = document.getElementsByClassName('tab-content');
             for (let i = 0; i < tabContents.length; i++) {
                 tabContents[i].classList.remove('active');
             }
             
-            // Remove active class from all tabs
             const tabs = document.getElementsByClassName('tab');
             for (let i = 0; i < tabs.length; i++) {
                 tabs[i].classList.remove('active');
             }
             
-            // Show the current tab and mark button as active
             document.getElementById(tabName).classList.add('active');
             event.currentTarget.classList.add('active');
             
-            // If opening summary tab, update charts
             if (tabName === 'summary' && allData.length > 0) {
                 updateSummaryCharts();
+            } else if (tabName === 'status' && allData.length > 0) {
+                updateStatusTable();
+            } else if (tabName === 'resource' && allData.length > 0) {
+                updateResourceTables();
             }
         }
         
@@ -873,45 +1109,61 @@
         }
         
         function loadData() {
-            // Show loading state
             document.getElementById('summaryLoading').style.display = 'flex';
             document.getElementById('reportsLoading').style.display = 'flex';
+            document.getElementById('statusLoading').style.display = 'flex';
+            document.getElementById('resourceLoading').style.display = 'flex';
             
             fetch(SHEET_URL)
                 .then(response => response.text())
                 .then(csvData => {
-                    // Parse CSV data with improved parser
                     allData = parseCSV(csvData);
                     
-                    // Hide loading and show content
                     document.getElementById('summaryLoading').style.display = 'none';
                     document.getElementById('summaryContent').style.display = 'block';
                     document.getElementById('reportsLoading').style.display = 'none';
                     document.getElementById('reportsContent').style.display = 'block';
+                    document.getElementById('statusLoading').style.display = 'none';
+                    document.getElementById('statusContent').style.display = 'block';
+                    document.getElementById('resourceLoading').style.display = 'none';
+                    document.getElementById('resourceContent').style.display = 'block';
                     
-                    // Apply filters initially
                     applyFilters();
-                    
-                    // Update summary charts if on summary tab
+                    if (document.getElementById('status').classList.contains('active')) {
+                        updateStatusTable();
+                    }
                     if (document.getElementById('summary').classList.contains('active')) {
                         updateSummaryCharts();
+                    }
+                    if (document.getElementById('resource').classList.contains('active')) {
+                        updateResourceTables();
                     }
                 })
                 .catch(error => {
                     console.error('Error loading data:', error);
                     document.getElementById('reportContainer').innerHTML = 
                         '<p class="no-data">Error loading data. Please try again later.</p>';
+                    document.getElementById('statusTableBody').innerHTML = 
+                        '<tr><td colspan="7" class="no-data">Error loading data. Please try again later.</td></tr>';
+                    document.getElementById('manpowerTableBody').innerHTML = 
+                        '<tr><td colspan="6" class="no-data">Error loading data. Please try again later.</td></tr>';
+                    document.getElementById('equipmentTableBody').innerHTML = 
+                        '<tr><td colspan="6" class="no-data">Error loading data. Please try again later.</td></tr>';
+                    document.getElementById('notFoundTableBody').innerHTML = 
+                        '<tr><td colspan="6" class="no-data">Error loading data. Please try again later.</td></tr>';
                     
-                    // Hide loading even if there's an error
                     document.getElementById('summaryLoading').style.display = 'none';
                     document.getElementById('reportsLoading').style.display = 'none';
+                    document.getElementById('statusLoading').style.display = 'none';
+                    document.getElementById('resourceLoading').style.display = 'none';
                     document.getElementById('summaryContent').style.display = 'block';
                     document.getElementById('reportsContent').style.display = 'block';
+                    document.getElementById('statusContent').style.display = 'block';
+                    document.getElementById('resourceContent').style.display = 'block';
                 });
         }
         
         function parseCSV(csv) {
-            // Improved CSV parser that handles multi-line fields
             const lines = [];
             let currentLine = [];
             let inQuotes = false;
@@ -935,7 +1187,6 @@
                 }
             }
             
-            // Add the last line
             if (currentField.trim() !== '' || currentLine.length > 0) {
                 currentLine.push(currentField.trim());
                 lines.push(currentLine);
@@ -957,45 +1208,9 @@
             return result;
         }
         
-        function applyFilters() {
-            const selectedDate = document.getElementById('reportDate').valueAsDate;
-            const selectedArea = document.getElementById('areaSelect').value;
-            const wiSearch = document.getElementById('wiInput').value.trim().toLowerCase();
-            
-            if (!selectedDate) return;
-            
-            const formattedSelectedDate = formatDateForComparison(selectedDate);
-            
-            const filteredData = allData.filter(row => {
-                if (!row.DATE) return false;
-                
-                // Date filtering
-                const rowDate = parseSheetDate(row.DATE);
-                if (!rowDate) return false;
-                const formattedRowDate = formatDateForComparison(rowDate);
-                if (formattedRowDate !== formattedSelectedDate) return false;
-                
-                // Area filtering
-                if (selectedArea !== 'all' && row['AREA / BLOCK'] !== selectedArea) {
-                    return false;
-                }
-                
-                // WI number filtering (partial match)
-                if (wiSearch && row['WI NO'] && !row['WI NO'].toLowerCase().includes(wiSearch)) {
-                    return false;
-                }
-                
-                return true;
-            });
-            
-            displayData(filteredData);
-        }
-        
-        // Parse dates from sheet (handles both "27-Mar-2025" and "2025-03-27" formats)
         function parseSheetDate(dateString) {
             if (!dateString) return null;
             
-            // Try DD-MMM-YYYY format (e.g., 27-Mar-2025)
             const months = {
                 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
                 'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
@@ -1009,20 +1224,18 @@
                 return new Date(year, month, day);
             }
             
-            // Try YYYY-MM-DD format (e.g., 2025-03-27)
             const yyyyFormat = dateString.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
             if (yyyyFormat) {
                 const year = parseInt(yyyyFormat[1], 10);
-                const month = parseInt(yyyyFormat[2], 10) - 1; // Months are 0-indexed
+                const month = parseInt(yyyyFormat[2], 10) - 1;
                 const day = parseInt(yyyyFormat[3], 10);
                 return new Date(year, month, day);
             }
             
-            // Try DD/MM/YYYY format (e.g., 05/06/2025)
             const ddmmFormat = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
             if (ddmmFormat) {
                 const day = parseInt(ddmmFormat[1], 10);
-                const month = parseInt(ddmmFormat[2], 10) - 1; // Months are 0-indexed
+                const month = parseInt(ddmmFormat[2], 10) - 1;
                 const year = parseInt(ddmmFormat[3], 10);
                 return new Date(year, month, day);
             }
@@ -1030,7 +1243,6 @@
             return null;
         }
         
-        // Format date for comparison (YYYY-MM-DD)
         function formatDateForComparison(date) {
             if (!date) return '';
             const year = date.getFullYear();
@@ -1039,7 +1251,96 @@
             return `${year}-${month}-${day}`;
         }
         
-        function displayData(data) {
+        function groupDataByProject(data, dateKey, areaFilter = 'all', disciplineFilter = 'all', wiFilter = '') {
+            const grouped = {};
+            const uniqueCrewIds = new Set();
+            
+            data.forEach(row => {
+                const rowDate = parseSheetDate(row.DATE);
+                if (!rowDate) return;
+                
+                const formattedRowDate = formatDateForComparison(rowDate);
+                if (formattedRowDate !== dateKey) return;
+                
+                if (areaFilter !== 'all' && row['AREA / BLOCK'] !== areaFilter) return;
+                if (disciplineFilter !== 'all' && row['DISCIPLINE'] !== disciplineFilter) return;
+                if (wiFilter && row['WI NO'] && !row['WI NO'].toLowerCase().includes(wiFilter.toLowerCase())) return;
+                
+                const key = `${row['FOREMAN ID']}|${row['WI NO']}|${row['AREA / BLOCK']}|${row['DISCIPLINE']}`;
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        id: row['FOREMAN ID'] || '-',
+                        crewLead: row['FOREMAN NAME'] || '-',
+                        projects: row['WI NO'] || '-',
+                        area: row['AREA / BLOCK'] || 'Unknown',
+                        discipline: row['DISCIPLINE'] || '-',
+                        permits: new Set(),
+                        resources: new Set(),
+                        foremen: new Set(),
+                        details: {
+                            'DESCRIPTION OF WORK': row['DESCRIPTION OF WORK'] || '',
+                            'PERMIT NUMBER': row['PERMIT NUMBER'] || '',
+                            'VALIDATION TIME': row['VALIDATION TIME'] || '',
+                            'SUSPENSION TIME': row['SUSPENSION TIME'] || '',
+                            'PROGRESS': row['PROGRESS'] || ''
+                        },
+                        resourceDetails: []
+                    };
+                }
+                
+                if (row['PERMIT NUMBER']) {
+                    grouped[key].permits.add(row['PERMIT NUMBER']);
+                }
+                
+                if (row['RESOURCE ID']) {
+                    grouped[key].resources.add(row['RESOURCE ID']);
+                    uniqueCrewIds.add(row['RESOURCE ID']);
+                    grouped[key].resourceDetails.push({
+                        'RESOURCE ID': row['RESOURCE ID'],
+                        'RESOURCE DESIGNATION': row['RESOURCE DESIGNATION'] || '-',
+                        'MANPOWER / EQUIPMENT': row['MANPOWER / EQUIPMENT'] || '',
+                        'TIME-IN': row['TIME-IN'] || '-',
+                        'TIME-OUT': row['TIME-OUT'] || '-'
+                    });
+                }
+                
+                if (row['FOREMAN ID']) {
+                    grouped[key].foremen.add(row['FOREMAN ID']);
+                }
+            });
+            
+            return { grouped, totalCrewSize: uniqueCrewIds.size };
+        }
+        
+        function applyFilters() {
+            const selectedDate = document.getElementById('reportDate').valueAsDate;
+            const selectedArea = document.getElementById('areaSelect').value;
+            const selectedDiscipline = document.getElementById('disciplineSelect').value;
+            const wiSearch = document.getElementById('wiInput').value.trim();
+            
+            if (!selectedDate) return;
+            
+            const formattedSelectedDate = formatDateForComparison(selectedDate);
+            
+            const filteredData = allData.filter(row => {
+                if (!row.DATE) return false;
+                
+                const rowDate = parseSheetDate(row.DATE);
+                if (!rowDate) return false;
+                const formattedRowDate = formatDateForComparison(rowDate);
+                if (formattedRowDate !== formattedSelectedDate) return false;
+                
+                if (selectedArea !== 'all' && row['AREA / BLOCK'] !== selectedArea) return false;
+                if (selectedDiscipline !== 'all' && row['DISCIPLINE'] !== selectedDiscipline) return false;
+                if (wiSearch && row['WI NO'] && !row['WI NO'].toLowerCase().includes(wiSearch.toLowerCase())) return false;
+                
+                return true;
+            });
+            
+            displayData(filteredData, formattedSelectedDate, selectedArea, selectedDiscipline, wiSearch);
+        }
+        
+        function displayData(data, dateKey, selectedArea, selectedDiscipline, wiSearch) {
             const container = document.getElementById('reportContainer');
             const summaryContainer = document.getElementById('dailySummaryContainer');
             
@@ -1049,13 +1350,11 @@
                 return;
             }
             
-            // Calculate daily summary by area
-            const areaSummary = {};
-            const selectedDate = document.getElementById('reportDate').valueAsDate;
-            const formattedDate = formatDateForDisplay(selectedDate);
+            const { grouped, totalCrewSize } = groupDataByProject(data, dateKey, selectedArea, selectedDiscipline, wiSearch);
             
-            data.forEach(row => {
-                const area = row['AREA / BLOCK'] || 'Unknown';
+            const areaSummary = {};
+            Object.values(grouped).forEach(group => {
+                const area = group.area;
                 if (!areaSummary[area]) {
                     areaSummary[area] = {
                         permits: new Set(),
@@ -1064,20 +1363,14 @@
                     };
                 }
                 
-                if (row['PERMIT NUMBER']) {
-                    areaSummary[area].permits.add(row['PERMIT NUMBER']);
-                }
-                
-                if (row['RESOURCE ID']) {
-                    areaSummary[area].crewSize.add(row['RESOURCE ID']);
-                }
-                
-                if (row['FOREMAN ID']) {
-                    areaSummary[area].foremen.add(row['FOREMAN ID']);
-                }
+                group.permits.forEach(permit => areaSummary[area].permits.add(permit));
+                group.resources.forEach(crew => areaSummary[area].crewSize.add(crew));
+                group.foremen.forEach(foreman => areaSummary[area].foremen.add(foreman));
             });
             
-            // Generate daily summary HTML
+            const selectedDate = document.getElementById('reportDate').valueAsDate;
+            const formattedDate = formatDateForDisplay(selectedDate);
+            
             let summaryHtml = `
                 <h3>Daily Summary for ${formattedDate}</h3>
                 <div class="daily-summary-grid">
@@ -1105,9 +1398,7 @@
                 `;
             });
             
-            // Add totals
             const totalPermits = Object.values(areaSummary).reduce((sum, area) => sum + area.permits.size, 0);
-            const totalCrew = Object.values(areaSummary).reduce((sum, area) => sum + area.crewSize.size, 0);
             const totalForemen = Object.values(areaSummary).reduce((sum, area) => sum + area.foremen.size, 0);
             
             summaryHtml += `
@@ -1120,7 +1411,7 @@
                             </div>
                             <div>
                                 <div class="summary-label">Crew Size</div>
-                                <div class="summary-value">${totalCrew}</div>
+                                <div class="summary-value">${totalCrewSize}</div>
                             </div>
                             <div>
                                 <div class="summary-label">Foremen</div>
@@ -1133,64 +1424,28 @@
             
             summaryContainer.innerHTML = summaryHtml;
             
-            // Group by work description and permit number
-            const groupedData = {};
-            data.forEach(row => {
-                const key = `${row['DESCRIPTION OF WORK']}|${row['PERMIT NUMBER']}|${row['WI NO']}|${row['FOREMAN ID']}|${row['FOREMAN NAME'] || 'Unknown'}`;
-                if (!groupedData[key]) {
-                    groupedData[key] = {
-                        details: {
-                            'FOREMAN ID': row['FOREMAN ID'],
-                            'FOREMAN NAME': row['FOREMAN NAME'] || 'Unknown',
-                            'WI NO': row['WI NO'],
-                            'AREA / BLOCK': row['AREA / BLOCK'],
-                            'DESCRIPTION OF WORK': row['DESCRIPTION OF WORK'],
-                            'PERMIT NUMBER': row['PERMIT NUMBER'],
-                            'VALIDATION TIME': row['VALIDATION TIME'],
-                            'SUSPENSION TIME': row['SUSPENSION TIME']
-                        },
-                        resources: []
-                    };
-                }
-                
-                // Add all resources
-                groupedData[key].resources.push({
-                    'RESOURCE ID': row['RESOURCE ID'],
-                    'RESOURCE DESIGNATION': row['RESOURCE DESIGNATION'] || '-',
-                    'MANPOWER / EQUIPMENT': row['MANPOWER / EQUIPMENT'] || '-',
-                    'TIME-IN': row['TIME-IN'],
-                    'TIME-OUT': row['TIME-OUT']
-                });
-            });
-            
-            // Generate HTML
             let html = '';
             let groupCounter = 1;
             
-            Object.values(groupedData).forEach(group => {
-                // Count different types of resources
-                const manpowerCount = group.resources.filter(r => 
-                    r['MANPOWER / EQUIPMENT'] && 
+            Object.values(grouped).forEach(group => {
+                const manpowerCount = group.resourceDetails.filter(r => 
                     r['MANPOWER / EQUIPMENT'].toLowerCase() === 'manpower'
                 ).length;
                 
-                const equipmentCount = group.resources.filter(r => 
-                    r['MANPOWER / EQUIPMENT'] && 
+                const equipmentCount = group.resourceDetails.filter(r => 
                     r['MANPOWER / EQUIPMENT'].toLowerCase() === 'equipment'
                 ).length;
                 
-                // Count unique crew members
-                const uniqueCrew = new Set(group.resources.map(r => r['RESOURCE ID']));
-                
-                // Find foreman (first resource with matching ID or first resource if not found)
-                const foreman = group.resources.find(r => r['RESOURCE ID'] === group.details['FOREMAN ID']) || 
-                               group.resources[0];
+                const progressLines = group.details['PROGRESS'].replace(/"/g, '').split('\n').map(line => {
+                    const [description, unit] = line.split(' = ');
+                    return { description, unit };
+                });
                 
                 html += `
                     <div class="work-group">
                         <div class="work-group-header">
-                            <span class="work-group-title">Work Pogress Report - Group #${groupCounter}</span>
-                            <span class="work-group-id">WI NO: ${group.details['WI NO']}</span>
+                            <span class="work-group-title">Work Progress Report - Group #${groupCounter}</span>
+                            <span class="work-group-id">WI NO: ${group.projects}</span>
                         </div>
                         
                         <div class="work-description">${group.details['DESCRIPTION OF WORK'].replace(/"/g, '')}</div>
@@ -1198,15 +1453,15 @@
                         <div class="summary-card">
                             <div class="summary-item">
                                 <div class="summary-label">Foreman ID</div>
-                                <div class="summary-value">${group.details['FOREMAN ID']}</div>
+                                <div class="summary-value">${group.id}</div>
                             </div>
                             <div class="summary-item">
                                 <div class="summary-label">Foreman Name</div>
-                                <div class="summary-value">${group.details['FOREMAN NAME']}</div>
+                                <div class="summary-value">${group.crewLead}</div>
                             </div>
                             <div class="summary-item">
                                 <div class="summary-label">Area/Block</div>
-                                <div class="summary-value">${group.details['AREA / BLOCK']}</div>
+                                <div class="summary-value">${group.area}</div>
                             </div>
                             <div class="summary-item">
                                 <div class="summary-label">Permit Number</div>
@@ -1226,35 +1481,63 @@
                             </div>
                             <div class="summary-item">
                                 <div class="summary-label">Crew Size</div>
-                                <div class="summary-value">${uniqueCrew.size}</div>
+                                <div class="summary-value">${group.resources.size}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Discipline</div>
+                                <div class="summary-value">${group.discipline}</div>
                             </div>
                         </div>
                         
-                        <h3>Resource Details</h3>
-                        <table class="resource-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Resource ID</th>
-                                    <th>Designation</th>
-                                    <th>Type</th>
-                                    <th>Time-In</th>
-                                    <th>Time-Out</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${group.resources.map((resource, index) => `
+                        <div class="details-card">
+                            <h3>Progress Details</h3>
+                            <table class="progress-table">
+                                <thead>
                                     <tr>
-                                        <td>${index + 1}</td>
-                                        <td>${resource['RESOURCE ID']}</td>
-                                        <td>${resource['RESOURCE DESIGNATION']}</td>
-                                        <td>${resource['MANPOWER / EQUIPMENT']}</td>
-                                        <td>${resource['TIME-IN'] || '-'}</td>
-                                        <td>${resource['TIME-OUT'] || '-'}</td>
+                                        <th>#</th>
+                                        <th>Description</th>
+                                        <th>Quantity</th>
                                     </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    ${progressLines.map((line, index) => `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td>${line.description || '-'}</td>
+                                            <td>${line.unit || '-'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="details-card">
+                            <h3>Resource Details</h3>
+                            <table class="resource-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Resource ID</th>
+                                        <th>Designation</th>
+                                        <th>Type</th>
+                                        <th>Time-In</th>
+                                        <th>Time-Out</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${group.resourceDetails.map((resource, index) => `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td>${resource['RESOURCE ID']}</td>
+                                            <td>${resource['RESOURCE DESIGNATION']}</td>
+                                            <td>${resource['MANPOWER / EQUIPMENT']}</td>
+                                            <td>${resource['TIME-IN']}</td>
+                                            <td>${resource['TIME-OUT']}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 `;
                 groupCounter++;
@@ -1271,88 +1554,72 @@
             
             if (!startDate || !endDate) return;
             
-            // Prepare data for charts
             const datesInRange = getDatesInRange(startDate, endDate);
             const areaCrewData = {};
             const areaTrendData = {};
             const workGroupData = {};
+            const recentActivityData = {};
             
-            // Initialize data structures
             datesInRange.forEach(date => {
                 const dateKey = formatDateForComparison(date);
                 areaTrendData[dateKey] = {};
-            });
-            
-            // Process all data to get crew allocations and work group utilization
-            allData.forEach(row => {
-                const rowDate = parseSheetDate(row.DATE);
-                if (!rowDate) return;
+                recentActivityData[dateKey] = {
+                    date: dateKey,
+                    foremen: new Set(),
+                    crewSize: new Set(),
+                    active: false
+                };
                 
-                const formattedRowDate = formatDateForComparison(rowDate);
-                const formattedDisplayDate = formatDateForDisplay(rowDate);
+                const { grouped } = groupDataByProject(allData, dateKey);
                 
-                // Skip if date is outside our range
-                if (rowDate < startDate || rowDate > endDate) return;
-                
-                const area = row['AREA / BLOCK'] || 'Unknown';
-                const workGroupKey = `${row['WI NO']} - ${row['AREA / BLOCK'] || 'Unknown'}`;
-                
-                // Initialize area data if not exists
-                if (!areaCrewData[area]) {
-                    areaCrewData[area] = {
-                        totalCrew: 0,
-                        dates: {},
-                        foremen: new Set()
-                    };
-                }
-                
-                // Track unique crew members per area per date
-                if (!areaCrewData[area].dates[formattedRowDate]) {
-                    areaCrewData[area].dates[formattedRowDate] = {
-                        crewSize: new Set(),
-                        foremen: new Set()
-                    };
-                }
-                
-                if (row['RESOURCE ID']) {
-                    areaCrewData[area].dates[formattedRowDate].crewSize.add(row['RESOURCE ID']);
-                }
-                
-                if (row['FOREMAN ID']) {
-                    areaCrewData[area].dates[formattedRowDate].foremen.add(row['FOREMAN ID']);
-                    areaCrewData[area].foremen.add(row['FOREMAN ID']);
-                }
-                
-                // Track work group utilization
-                if (!workGroupData[workGroupKey]) {
-                    workGroupData[workGroupKey] = {
-                        crewSize: new Set(),
-                        area: row['AREA / BLOCK'] || 'Unknown',
-                        wiNo: row['WI NO']
-                    };
-                }
-                if (row['RESOURCE ID']) {
-                    workGroupData[workGroupKey].crewSize.add(row['RESOURCE ID']);
-                }
-            });
-            
-            // Calculate totals and prepare trend data
-            Object.keys(areaCrewData).forEach(area => {
-                Object.keys(areaCrewData[area].dates).forEach(date => {
-                    const crewSize = areaCrewData[area].dates[date].crewSize.size;
-                    // Prepare trend data
-                    if (!areaTrendData[date][area]) {
-                        areaTrendData[date][area] = 0;
+                Object.values(grouped).forEach(group => {
+                    const area = group.area;
+                    if (!areaCrewData[area]) {
+                        areaCrewData[area] = {
+                            totalCrew: 0,
+                            dates: {},
+                            foremen: new Set()
+                        };
                     }
-                    areaTrendData[date][area] += crewSize;
+                    if (!areaCrewData[area].dates[dateKey]) {
+                        areaCrewData[area].dates[dateKey] = {
+                            crewSize: new Set(),
+                            foremen: new Set()
+                        };
+                    }
+                    
+                    group.resources.forEach(crew => {
+                        areaCrewData[area].dates[dateKey].crewSize.add(crew);
+                        recentActivityData[dateKey].crewSize.add(crew);
+                    });
+                    group.foremen.forEach(foreman => {
+                        areaCrewData[area].dates[dateKey].foremen.add(foreman);
+                        areaCrewData[area].foremen.add(foreman);
+                        recentActivityData[dateKey].foremen.add(foreman);
+                    });
+                    
+                    if (!areaTrendData[dateKey][area]) {
+                        areaTrendData[dateKey][area] = 0;
+                    }
+                    areaTrendData[dateKey][area] += group.resources.size;
+                    
+                    const workGroupKey = `${group.projects} - ${area}`;
+                    if (!workGroupData[workGroupKey]) {
+                        workGroupData[workGroupKey] = {
+                            crewSize: new Set(),
+                            area: area,
+                            wiNo: group.projects
+                        };
+                    }
+                    group.resources.forEach(crew => workGroupData[workGroupKey].crewSize.add(crew));
+                    
+                    recentActivityData[dateKey].active = true;
                 });
             });
             
-            // Prepare data for Daily Crew Allocation chart (stacked bar)
             const crewAllocationLabels = datesInRange.map(date => formatDateForDisplay(date));
             const crewAllocationDatasets = [];
             
-            // Get top 5 areas by total crew size
             const areasByCrewSize = Object.keys(areaCrewData)
                 .map(area => ({
                     name: area,
@@ -1362,7 +1629,6 @@
                 .sort((a, b) => b.total - a.total)
                 .slice(0, 5);
             
-            // Create dataset for each area
             const colors = [
                 'rgba(37, 99, 235, 0.8)',
                 'rgba(139, 92, 246, 0.8)',
@@ -1387,7 +1653,6 @@
                 });
             });
             
-            // Prepare data for Crew Trend chart (line)
             const trendLabels = datesInRange.map(date => formatDateForDisplay(date));
             const trendDatasets = [];
             
@@ -1408,7 +1673,6 @@
                 });
             });
             
-            // Prepare data for Work Group Utilization chart (bar)
             const workGroupLabels = [];
             const workGroupDatasets = [];
             const topWorkGroups = Object.keys(workGroupData)
@@ -1430,35 +1694,6 @@
                 borderWidth: 1
             });
             
-            // Update recent activity table - now counting unique foremen per day
-            const recentActivityData = {};
-            datesInRange.forEach(date => {
-                const dateKey = formatDateForComparison(date);
-                recentActivityData[dateKey] = {
-                    date: dateKey,
-                    foremen: new Set(),
-                    crewSize: new Set(),
-                    active: false
-                };
-            });
-            
-            allData.forEach(row => {
-                const rowDate = parseSheetDate(row.DATE);
-                if (!rowDate) return;
-                
-                const dateKey = formatDateForComparison(rowDate);
-                
-                if (recentActivityData[dateKey]) {
-                    if (row['FOREMAN ID']) {
-                        recentActivityData[dateKey].foremen.add(row['FOREMAN ID']);
-                    }
-                    if (row['RESOURCE ID']) {
-                        recentActivityData[dateKey].crewSize.add(row['RESOURCE ID']);
-                    }
-                    recentActivityData[dateKey].active = true;
-                }
-            });
-            
             const recentActivityHtml = Object.values(recentActivityData)
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map(day => `
@@ -1472,12 +1707,10 @@
                 `).join('');
             document.getElementById('recentActivity').innerHTML = recentActivityHtml;
             
-            // Destroy existing charts if they exist
             if (charts.crewAllocationChart) charts.crewAllocationChart.destroy();
             if (charts.crewTrendChart) charts.crewTrendChart.destroy();
             if (charts.workGroupUtilizationChart) charts.workGroupUtilizationChart.destroy();
             
-            // Create or update charts
             const ctx1 = document.getElementById('crewAllocationChart').getContext('2d');
             charts.crewAllocationChart = new Chart(ctx1, {
                 type: 'bar',
@@ -1576,6 +1809,155 @@
                 }
             });
         }
+
+        function updateStatusTable() {
+            const selectedDate = document.getElementById('statusDate').valueAsDate;
+            const selectedArea = document.getElementById('statusAreaSelect').value;
+            if (!selectedDate) return;
+
+            const formattedSelectedDate = formatDateForComparison(selectedDate);
+            const formattedDisplayDate = formatDateForDisplay(selectedDate);
+
+            document.getElementById('statusTableTitle').textContent = `Active Projects on ${formattedDisplayDate}`;
+
+            const { grouped, totalCrewSize } = groupDataByProject(allData, formattedSelectedDate, selectedArea);
+
+            if (Object.keys(grouped).length === 0) {
+                document.getElementById('totalProjects').textContent = '0';
+                document.getElementById('totalCrewSize').textContent = '0';
+                document.getElementById('statusTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="no-data">No records found for the selected date and area.</td></tr>';
+                return;
+            }
+
+            const statusData = Object.values(grouped).map((group, index) => ({
+                slNo: index + 1,
+                id: group.id,
+                crewLead: group.crewLead,
+                projects: group.projects,
+                area: group.area,
+                crewSize: group.resources.size,
+                discipline: group.discipline
+            }));
+
+            document.getElementById('totalProjects').textContent = statusData.length;
+            document.getElementById('totalCrewSize').textContent = totalCrewSize;
+
+            const statusHtml = statusData.map(item => `
+                <tr>
+                    <td>${item.slNo}</td>
+                    <td>${item.id}</td>
+                    <td>${item.crewLead}</td>
+                    <td>${item.projects}</td>
+                    <td>${item.area}</td>
+                    <td>${item.crewSize}</td>
+                    <td>${item.discipline}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('statusTableBody').innerHTML = statusHtml;
+        }
+        
+        function updateResourceTables() {
+            const selectedDate = document.getElementById('resourceDate').valueAsDate;
+            const selectedArea = document.getElementById('resourceAreaSelect').value;
+            if (!selectedDate) return;
+
+            const formattedSelectedDate = formatDateForComparison(selectedDate);
+            const formattedDisplayDate = formatDateForDisplay(selectedDate);
+
+            document.getElementById('resourceTableTitle').textContent = `Resources on ${formattedDisplayDate}`;
+
+            const { grouped } = groupDataByProject(allData, formattedSelectedDate, selectedArea);
+
+            if (Object.keys(grouped).length === 0) {
+                document.getElementById('totalManpower').textContent = '0';
+                document.getElementById('totalEquipment').textContent = '0';
+                document.getElementById('totalNotFound').textContent = '0';
+                document.getElementById('manpowerTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="no-data">No manpower records found.</td></tr>';
+                document.getElementById('equipmentTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="no-data">No equipment records found.</td></tr>';
+                document.getElementById('notFoundTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="no-data">No not found records found.</td></tr>';
+                return;
+            }
+
+            let manpowerResources = [];
+            let equipmentResources = [];
+            let notFoundResources = [];
+            let manpowerCount = 0;
+            let equipmentCount = 0;
+            let notFoundCount = 0;
+
+            Object.values(grouped).forEach(group => {
+                group.resourceDetails.forEach(resource => {
+                    const resourceEntry = {
+                        resourceId: resource['RESOURCE ID'],
+                        designation: resource['RESOURCE DESIGNATION'],
+                        project: group.projects,
+                        area: group.area,
+                        foreman: group.crewLead
+                    };
+
+                    const type = resource['MANPOWER / EQUIPMENT'].toLowerCase();
+                    if (type === 'manpower') {
+                        manpowerResources.push(resourceEntry);
+                        manpowerCount++;
+                    } else if (type === 'equipment') {
+                        equipmentResources.push(resourceEntry);
+                        equipmentCount++;
+                    } else {
+                        notFoundResources.push(resourceEntry);
+                        notFoundCount++;
+                    }
+                });
+            });
+
+            document.getElementById('totalManpower').textContent = manpowerCount;
+            document.getElementById('totalEquipment').textContent = equipmentCount;
+            document.getElementById('totalNotFound').textContent = notFoundCount;
+
+            const manpowerHtml = manpowerResources.map((resource, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${resource.resourceId}</td>
+                    <td>${resource.designation}</td>
+                    <td>${resource.project}</td>
+                    <td>${resource.area}</td>
+                    <td>${resource.foreman}</td>
+                </tr>
+            `).join('');
+
+            const equipmentHtml = equipmentResources.map((resource, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${resource.resourceId}</td>
+                    <td>${resource.designation}</td>
+                    <td>${resource.project}</td>
+                    <td>${resource.area}</td>
+                    <td>${resource.foreman}</td>
+                </tr>
+            `).join('');
+
+            const notFoundHtml = notFoundResources.map((resource, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${resource.resourceId}</td>
+                    <td>${resource.designation}</td>
+                    <td>${resource.project}</td>
+                    <td>${resource.area}</td>
+                    <td>${resource.foreman}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('manpowerTableBody').innerHTML = manpowerHtml || 
+                '<tr><td colspan="6" class="no-data">No manpower records found.</td></tr>';
+            document.getElementById('equipmentTableBody').innerHTML = equipmentHtml || 
+                '<tr><td colspan="6" class="no-data">No equipment records found.</td></tr>';
+            document.getElementById('notFoundTableBody').innerHTML = notFoundHtml || 
+                '<tr><td colspan="6" class="no-data">No not found records found.</td></tr>';
+        }
         
         function getDatesInRange(startDate, endDate) {
             const dates = [];
@@ -1608,7 +1990,6 @@
             const hours = parseInt(match[1], 10);
             const minutes = parseInt(match[2], 10);
             
-            // Create a date object with arbitrary date (we only care about time)
             const date = new Date();
             date.setHours(hours, minutes, 0, 0);
             return date;
